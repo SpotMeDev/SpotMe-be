@@ -3,10 +3,8 @@ const router = express.Router();
 const User = require('../models/user'); 
 const mongoose = require('mongoose'); 
 const bcrypt = require('bcrypt'); 
-// const passport = require('passport');
+const passport = require('passport');
 
-// const initializePassport = require('../passport-config'); 
-// initializePassport(passport); 
 
 mongoose.connect("mongodb://localhost/spotme_db", {useNewUrlParser: true}); 
 
@@ -39,6 +37,24 @@ router.post("/signup", async (req, res) => {
             return res.status(400).send({message: "Unable to signup user"})
         }
     }
+})
+
+
+router.post('/login', (req, res, next) => {
+    passport.authenticate('local', function(err, user, info) {
+        if (err) { 
+            return res.status(403).send({message: "Error logging in at this time"}) 
+        }
+        if (!user) { 
+            return res.status(401).send({message: "Incorrect email or password"}); 
+        }
+        req.logIn(user, function(err) {
+          if (err) { 
+              return res.status(403).send({message: "Error logging in at this time"}) 
+          }
+          return res.status(200).send({message: "Successfully logged in!"})
+        });
+      })(req, res, next);
 })
 
 

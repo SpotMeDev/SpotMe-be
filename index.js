@@ -7,32 +7,34 @@ const app = express();
 const bodyParser = require('body-parser'); 
 const port = process.env.PORT || 8080; 
 const authRouter = require('./Controllers/AuthController'); 
-// const passport = require('passport');
-// const initializePassport = require('../passport-config'); 
-// initializePassport(passport); 
+const passport = require('passport');
+const session = require('express-session'); 
+const initializePassport = require('./passport-config'); 
+initializePassport(passport); 
 
+// Body parser 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true })); 
 
-// app.use(session({
-//     secret: process.env.SESSION_SECRET, 
-//     resave: false, 
-//     saveUninitialized: false
-// }))
+// Express session middleware
+app.use(session({
+    secret: process.env.SESSION_SECRET, 
+    resave: true, 
+    saveUninitialized: false
+}))
 
-// app.use(passport.initialize())
-// app.use(passport.session())
+// Passport middleware
+app.use(passport.initialize())
+app.use(passport.session())
 
-
+// Routes
 app.use('/auth', authRouter); 
-
-
 app.get("/", (req, res) => {
     res.send({message: "Welcome to the SpotMe BackEnd"})
 });
 
 
-
+// Port listening
 app.listen(port, () => console.log(`Listening on port ${port}`)); 
 
 
