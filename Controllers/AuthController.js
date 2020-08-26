@@ -4,15 +4,17 @@ const User = require('../models/user');
 const mongoose = require('mongoose'); 
 const bcrypt = require('bcrypt'); 
 const passport = require('passport');
-
+const utils = require('../utils.js'); 
 
 mongoose.connect("mongodb://localhost/spotme_db", {useNewUrlParser: true}); 
+mongoose.set('useFindAndModify', false);
 
 
 router.post("/signup", async (req, res) => {
-    if (req.body.password !== req.body.confirmPassword || (req.body.password === "" || req.body.confirmPassword ==="")) {
+    if (req.body.password !== req.body.confirmPassword || (req.body.password === "" || req.body.confirmPassword === "")) {
         return res.status(400).send({message: "Your passsword and confirm password must match"})
     }
+    // check that email is not already used 
     else {
         try {
             const hashedPassword = await bcrypt.hash(req.body.password, 10)
@@ -29,7 +31,8 @@ router.post("/signup", async (req, res) => {
                  }
                  else {
                      console.log(user); 
-                     res.status(200).send({message: "Successfully signed up the user!"})
+                     const jwt = utils.issueJWT(user); 
+                     res.status(200).send({message: "Successfully signed up the user!", token: jwt.token, expiresIn: jwt.expires})
                  }
              })
         }
@@ -41,21 +44,60 @@ router.post("/signup", async (req, res) => {
 
 
 router.post('/login', (req, res, next) => {
-    passport.authenticate('local', function(err, user, info) {
-        if (err) { 
-            return res.status(403).send({message: "Error logging in at this time"}) 
+    User.findOne({email: req.body.email}, (err, user) => {
+        if (err) {
+            return res.status(401).send({message: "Incorrect username or password. Please try again!"}); 
         }
-        if (!user) { 
-            return res.status(401).send({message: "Incorrect email or password"}); 
-        }
-        req.logIn(user, function(err) {
-          if (err) { 
-              return res.status(403).send({message: "Error logging in at this time"}) 
-          }
-          return res.status(200).send({message: "Successfully logged in!"})
-        });
-      })(req, res, next);
+        bcrypt.compare(req.body.password, user.password, (err, isMatch) => {
+                if (err) {
+                    return res.status(401).send({message: "Unable to log in"})
+                }
+                if (isMatch) {
+                    const jwt = utils.issueJWT(user); 
+                    return res.status(200).send({message: "Successfully logged in", token: jwt.token, expiresIn: jwt.expires})
+                }
+                else {
+                    return res.status(401).send({message: "Incorrect usernmae or password"})
+                }
+            })
+    })
 })
 
+
+router.post('/transaction', passport.authenticate('jwt', {session: false}), (req, res) => {
+    // check that the user has enough in their current balance to make that transaction
+    const sender = req.user; 
+    if (sender.balance >= req.body.amount) {
+        // decrement the user's balance 
+        User.findOneAndUpdate({email: sender.email}, {$inc: {balance: -req.body.amount}}, {new: true}, (err, updatedSender) => {
+            
+            if (err) {
+                return res.status(400).send({message: "Unable to complete the transaction"}); 
+            }
+
+            // now check to see that the recipient user exists 
+            User.findOneAndUpdate({email: req.body.recipientEmail}, {$inc: {balance: req.body.amount}}, {new: true}, (err, recipient) => {
+                if (err) {
+                    return res.status(400).send({message: "Unable to complete the transaction"}); 
+                }
+                else {
+                    return res.status(200).send({message: "Successfully completed transaction", updatedSender: updatedSender})
+                }
+            })
+        })
+    }
+})
+
+router.post('/add-balance', passport.authenticate('jwt', {session: false}), (req, res) => {
+    const sender = req.user; 
+    User.findOneAndUpdate({email: sender.email}, {$inc: {balance: req.body.amount}}, {new: true}, (err, updatedUser) => {
+        if (err) {
+            return res.status(400).send({message: "Unable to update balance at this time! Please try again later"})
+        }
+        else {
+            return res.status(200).send({message: "Successfully updated your balance", updatedUser: updatedUser})
+        }
+    })
+})
 
 module.exports = router; 

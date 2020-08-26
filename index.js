@@ -16,12 +16,12 @@ initializePassport(passport);
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true })); 
 
-// Express session middleware
-app.use(session({
-    secret: process.env.SESSION_SECRET, 
-    resave: true, 
-    saveUninitialized: false
-}))
+// // Express session middleware
+// app.use(session({
+//     secret: process.env.SESSION_SECRET, 
+//     resave: true, 
+//     saveUninitialized: false
+// }))
 
 // Passport middleware
 app.use(passport.initialize())
