@@ -10,36 +10,45 @@ mongoose.connect("mongodb://localhost/spotme_db", {useNewUrlParser: true});
 mongoose.set('useFindAndModify', false);
 
 
-router.post("/signup", async (req, res) => {
+router.post("/signup", (req, res) => {
     if (req.body.password !== req.body.confirmPassword || (req.body.password === "" || req.body.confirmPassword === "")) {
         return res.status(400).send({message: "Your passsword and confirm password must match"})
     }
+    
     // check that email is not already used 
-    else {
-        try {
-            const hashedPassword = await bcrypt.hash(req.body.password, 10)
-            User.create({
-                name: req.body.name, 
-                email: req.body.email, 
-                password: hashedPassword, 
-                balance: 0
-             }, (err, user) => {
-                 if (err) {
-                     res.status(400).send({
-                         message: "Unable to sign up the user at this time"
-                     })
-                 }
-                 else {
-                     console.log(user); 
-                     const jwt = utils.issueJWT(user); 
-                     res.status(200).send({message: "Successfully signed up the user!", token: jwt.token, expiresIn: jwt.expires})
-                 }
-             })
-        }
-        catch {
+    User.findOne({email: req.body.email}, async (err, user) => {
+        if (err) {
             return res.status(400).send({message: "Unable to signup user"})
         }
-    }
+        if (user) {
+            return res.status(400).send({message: "Email is already in use. Please use another email address or sign in"})
+        }
+        else {
+            try {
+                const hashedPassword = await bcrypt.hash(req.body.password, 10)
+                User.create({
+                    name: req.body.name, 
+                    email: req.body.email, 
+                    password: hashedPassword, 
+                    balance: 0
+                 }, (err, user) => {
+                     if (err) {
+                         res.status(400).send({
+                             message: "Unable to sign up the user at this time"
+                         })
+                     }
+                     else {
+                         console.log(user); 
+                         const jwt = utils.issueJWT(user); 
+                         res.status(200).send({message: "Successfully signed up the user!", token: jwt.token, expiresIn: jwt.expires})
+                     }
+                 })
+            }
+            catch {
+                return res.status(400).send({message: "Unable to signup user"})
+            }
+        }
+    })    
 })
 
 
