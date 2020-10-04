@@ -14,6 +14,8 @@ router.post("/signup", (req, res) => {
     if (req.body.password !== req.body.confirmPassword || (req.body.password === "" || req.body.confirmPassword === "")) {
         return res.status(400).send({message: "Your passsword and confirm password must match"})
     }
+
+    console.log(req.body)
     
     // check that email is not already used 
     User.findOne({email: req.body.email}, async (err, user) => {
@@ -39,8 +41,9 @@ router.post("/signup", (req, res) => {
                      }
                      else {
                          console.log(user); 
-                         const jwt = utils.issueJWT(user); 
-                         res.status(200).send({message: "Successfully signed up the user!", token: jwt.token, expiresIn: jwt.expires})
+                         const jwt = utils.issueJWT(user);
+                         const retUser = {id: user.id, name: user.name, email: user.email, balance: user.balance};  
+                         res.status(200).send({message: "Successfully signed up the user!", token: jwt.token, expiresIn: jwt.expires, user: retUser})
                      }
                  })
             }
@@ -63,7 +66,8 @@ router.post('/login', (req, res, next) => {
                 }
                 if (isMatch) {
                     const jwt = utils.issueJWT(user); 
-                    return res.status(200).send({message: "Successfully logged in", token: jwt.token, expiresIn: jwt.expires})
+                    const retUser = {id: user.id, name: user.name, email: user.email, balance: user.balance }
+                    return res.status(200).send({message: "Successfully logged in", token: jwt.token, expiresIn: jwt.expires, user: retUser})
                 }
                 else {
                     return res.status(401).send({message: "Incorrect usernmae or password"})
