@@ -5,7 +5,11 @@ const userSchema = mongoose.Schema({
     name: String, 
     email: String, 
     password: String, 
-    balance: Number
+    balance: Number, 
+    friends: [{
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Friends'
+    }]
 })
 
 

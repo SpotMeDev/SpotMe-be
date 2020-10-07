@@ -5,6 +5,8 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt'); 
 const passport = require('passport');
 const utils = require('../utils.js'); 
+const Friends = require('../models/friends');
+const { restart } = require('nodemon');
 
 mongoose.connect("mongodb://localhost/spotme_db", {useNewUrlParser: true}); 
 mongoose.set('useFindAndModify', false);
@@ -14,8 +16,6 @@ router.post("/signup", (req, res) => {
     if (req.body.password !== req.body.confirmPassword || (req.body.password === "" || req.body.confirmPassword === "")) {
         return res.status(400).send({message: "Your passsword and confirm password must match"})
     }
-
-    console.log(req.body)
     
     // check that email is not already used 
     User.findOne({email: req.body.email}, async (err, user) => {
@@ -111,6 +111,33 @@ router.post('/add-balance', passport.authenticate('jwt', {session: false}), (req
             return res.status(200).send({message: "Successfully updated your balance", updatedUser: updatedUser})
         }
     })
+})
+
+
+router.post('/add-friend', passport.authenticate('jwt', {session: false}), async (req, res) => {
+    // create the two friend schemas for the user sending request and also the recipient 
+    try {
+        // get the sender and recipient user obj
+        const sender = req.user;
+        const recipient = await User.findOne({email: req.body.recipientEmail}); 
+
+        // update friend schema to reflect sending 
+        const senderFriendReq = await Friends.findOneAndUpdate({requester: sender, recipient: recipient}, {$set: {status: 1} } ,{new: true, upsert: true})
+        const recipientFriendReq = await Friends.findOneAndUpdate({requester: recipient, recipient: sender}, {$set: {status: 2}}, {new: true, upsert: true})
+
+        // update the user objects
+
+        const newSender = await User.findOneAndUpdate({email: sender.email}, {$push: {friends: senderFriendReq} })
+        const newRecipient = await User.findOneAndUpdate({email: recipient.email}, {$push: {friends: recipientFriendReq} })
+
+        const retUser = {name: newSender.name, email: newSender.email, balance: newSender.balance}
+
+        return res.status(200).send({message: "Successfully sent friend request!", user: retUser})
+    }
+    catch (err) {
+        return res.status(400).send({message: "Unable to complete friend request at this time"})
+    }
+
 })
 
 module.exports = router; 
