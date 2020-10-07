@@ -6,7 +6,6 @@ const bcrypt = require('bcrypt');
 const passport = require('passport');
 const utils = require('../utils.js'); 
 const Friends = require('../models/friends');
-const { restart } = require('nodemon');
 
 mongoose.connect("mongodb://localhost/spotme_db", {useNewUrlParser: true}); 
 mongoose.set('useFindAndModify', false);
@@ -127,8 +126,8 @@ router.post('/add-friend', passport.authenticate('jwt', {session: false}), async
 
         // update the user objects
 
-        const newSender = await User.findOneAndUpdate({email: sender.email}, {$push: {friends: senderFriendReq} })
-        const newRecipient = await User.findOneAndUpdate({email: recipient.email}, {$push: {friends: recipientFriendReq} })
+        const newSender = await User.findOneAndUpdate({email: sender.email}, {$push: {friends: senderFriendReq._id} })
+        const newRecipient = await User.findOneAndUpdate({email: recipient.email}, {$push: {friends: recipientFriendReq._id} })
 
         const retUser = {name: newSender.name, email: newSender.email, balance: newSender.balance}
 
@@ -137,7 +136,37 @@ router.post('/add-friend', passport.authenticate('jwt', {session: false}), async
     catch (err) {
         return res.status(400).send({message: "Unable to complete friend request at this time"})
     }
-
 })
+
+
+router.post('/handle-friend-request', passport.authenticate('jwt', {session: false}), async (req, res) => {
+    try {
+        const sender = req.user; 
+        const recipient = await User.findOne({email: req.body.recipientEmail}); 
+        if (req.body.acceptedRequest) {
+            // update the friends schema 
+            const updateSenderFriend = await Friends.findOneAndUpdate({requester: sender, recipient: recipient}, {$set: {status: 3}}); 
+            const updateRecipientFriend = await Friends.findOneAndUpdate({requester: recipient, recipient: sender}, {$set: {status: 3}})
+            return res.status(200).send({message: "Successfully accepted friend request!"})
+        }
+        else {
+            // delete the friend relationship between if the request has been declined  
+            const remSender = await Friends.findOneAndRemove({requester: sender, recipient: recipient}); 
+            const remRecipient = await Friends.findOneAndRemove({requester: recipient, recipient: sender})
+
+            // remove the friends from each of the user's objects 
+            const updatedSender = await User.findOneAndUpdate({email: sender.email}, {$pull: {friends: remSender._id}}, {new: true});
+            const updatedRecipient = await User.findOneAndUpdate({email: recipient.email}, {$pull: {friends: remRecipient._id}}, {new: true})
+
+            return res.status(200).send({message: "Succesfully declined friend request", user: updatedSender}); 
+
+        }
+    }
+    catch (err) {
+        return res.status(400).send({message: "Unable to handle friend request at this time!"})
+    }
+})
+
+
 
 module.exports = router; 
