@@ -121,13 +121,13 @@ router.post('/add-friend', passport.authenticate('jwt', {session: false}), async
         const recipient = await User.findOne({email: req.body.recipientEmail}); 
 
         // update friend schema to reflect sending 
-        const senderFriendReq = await Friends.findOneAndUpdate({requester: sender, recipient: recipient}, {$set: {status: 1} } ,{new: true, upsert: true})
-        const recipientFriendReq = await Friends.findOneAndUpdate({requester: recipient, recipient: sender}, {$set: {status: 2}}, {new: true, upsert: true})
+        const senderFriendReq = await Friends.findOneAndUpdate({requester: sender._id, recipient: recipient._id}, {$set: {status: 1} } ,{new: true, upsert: true})
+        const recipientFriendReq = await Friends.findOneAndUpdate({requester: recipient._id, recipient: sender._id}, {$set: {status: 2}}, {new: true, upsert: true})
 
         // update the user objects
 
-        const newSender = await User.findOneAndUpdate({email: sender.email}, {$push: {friends: senderFriendReq._id} })
-        const newRecipient = await User.findOneAndUpdate({email: recipient.email}, {$push: {friends: recipientFriendReq._id} })
+        const newSender = await User.findOneAndUpdate({email: sender.email}, {$push: {friends: senderFriendReq._id} }, {new: true})
+        const newRecipient = await User.findOneAndUpdate({email: recipient.email}, {$push: {friends: recipientFriendReq._id} }, {new: true})
 
         const retUser = {name: newSender.name, email: newSender.email, balance: newSender.balance}
 
@@ -145,14 +145,14 @@ router.post('/handle-friend-request', passport.authenticate('jwt', {session: fal
         const recipient = await User.findOne({email: req.body.recipientEmail}); 
         if (req.body.acceptedRequest) {
             // update the friends schema 
-            const updateSenderFriend = await Friends.findOneAndUpdate({requester: sender, recipient: recipient}, {$set: {status: 3}}); 
-            const updateRecipientFriend = await Friends.findOneAndUpdate({requester: recipient, recipient: sender}, {$set: {status: 3}})
+            const updateSenderFriend = await Friends.findOneAndUpdate({requester: sender._id, recipient: recipient._id}, {$set: {status: 3}}); 
+            const updateRecipientFriend = await Friends.findOneAndUpdate({requester: recipient._id, recipient: sender._id}, {$set: {status: 3}})
             return res.status(200).send({message: "Successfully accepted friend request!"})
         }
         else {
             // delete the friend relationship between if the request has been declined  
-            const remSender = await Friends.findOneAndRemove({requester: sender, recipient: recipient}); 
-            const remRecipient = await Friends.findOneAndRemove({requester: recipient, recipient: sender})
+            const remSender = await Friends.findOneAndRemove({requester: sender._id, recipient: recipient._id}); 
+            const remRecipient = await Friends.findOneAndRemove({requester: recipient._id, recipient: sender._id})
 
             // remove the friends from each of the user's objects 
             const updatedSender = await User.findOneAndUpdate({email: sender.email}, {$pull: {friends: remSender._id}}, {new: true});
