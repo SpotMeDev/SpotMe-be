@@ -76,43 +76,6 @@ router.post('/login', (req, res, next) => {
 })
 
 
-router.post('/transaction', passport.authenticate('jwt', {session: false}), (req, res) => {
-    // check that the user has enough in their current balance to make that transaction
-    const sender = req.user; 
-    if (sender.balance >= req.body.amount) {
-        // decrement the user's balance 
-        User.findOneAndUpdate({email: sender.email}, {$inc: {balance: -req.body.amount}}, {new: true}, (err, updatedSender) => {
-            
-            if (err) {
-                return res.status(400).send({message: "Unable to complete the transaction"}); 
-            }
-
-            // now check to see that the recipient user exists 
-            User.findOneAndUpdate({email: req.body.recipientEmail}, {$inc: {balance: req.body.amount}}, {new: true}, (err, recipient) => {
-                if (err) {
-                    return res.status(400).send({message: "Unable to complete the transaction"}); 
-                }
-                else {
-                    return res.status(200).send({message: "Successfully completed transaction", updatedSender: updatedSender})
-                }
-            })
-        })
-    }
-})
-
-router.post('/add-balance', passport.authenticate('jwt', {session: false}), (req, res) => {
-    const sender = req.user; 
-    User.findOneAndUpdate({email: sender.email}, {$inc: {balance: req.body.amount}}, {new: true}, (err, updatedUser) => {
-        if (err) {
-            return res.status(400).send({message: "Unable to update balance at this time! Please try again later"})
-        }
-        else {
-            return res.status(200).send({message: "Successfully updated your balance", updatedUser: updatedUser})
-        }
-    })
-})
-
-
 router.post('/add-friend', passport.authenticate('jwt', {session: false}), async (req, res) => {
     // create the two friend schemas for the user sending request and also the recipient 
     try {
@@ -143,7 +106,7 @@ router.post('/handle-friend-request', passport.authenticate('jwt', {session: fal
     try {
         const sender = req.user; 
         const recipient = await User.findOne({email: req.body.recipientEmail}); 
-        if (req.body.acceptedRequest) {
+        if (req.body.acceptedRequest === "true") {
             // update the friends schema 
             const updateSenderFriend = await Friends.findOneAndUpdate({requester: sender._id, recipient: recipient._id}, {$set: {status: 3}}); 
             const updateRecipientFriend = await Friends.findOneAndUpdate({requester: recipient._id, recipient: sender._id}, {$set: {status: 3}})
