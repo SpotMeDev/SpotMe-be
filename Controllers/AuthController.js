@@ -63,6 +63,26 @@ router.post('/login', (req, res) => {
 })
 
 
+router.get('/search-query', passport.authenticate('jwt', {session: false}), async (req, res) => {
+    try {
+        const sender = req.user; 
+        // find all users with a username that matches the query
+        const allUsers = await User.find({username: { $regex: req.body.query, $options: "i" }}); 
+        // now iterate through the array of users, removing any sensitive information, and also removing the user 
+        let ret = []
+        if (allUsers.length > 0) {
+            allUsers.forEach(user => {
+                const retUser = {_id: user.id, name: user.name, username: user.username, email: user.email}; 
+                ret.push(retUser); 
+            })
+        }
+        return res.status(200).send({message: "Successfully retrieved all users with the query", users: ret})
+    }
+    catch(err) {
+        return res.status(400).send({message: "Unable to search for users at this time!"})
+    }
+})
+
 router.post('/add-friend', passport.authenticate('jwt', {session: false}), async (req, res) => {
     // create the two friend schemas for the user sending request and also the recipient 
     try {
