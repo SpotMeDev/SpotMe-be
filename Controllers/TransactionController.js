@@ -15,15 +15,15 @@ router.post('/send', passport.authenticate('jwt', {session: false}), async (req,
     if (sender.balance >= req.body.amount) {
         // decrement the user's balance 
         try {
-            const updatedSender = await User.findOneAndUpdate({email: sender.email}, {$inc: {balance: -req.body.amount}}, {new: true});
-            const updatedRecipient = await User.findOneAndUpdate({email: req.body.recipientEmail}, {$inc: {balance: req.body.amount}}, {new: true}); 
+            const updatedSender = await User.findOneAndUpdate({username: sender.username}, {$inc: {balance: -req.body.amount}}, {new: true});
+            const updatedRecipient = await User.findOneAndUpdate({username: req.body.recipientUsername}, {$inc: {balance: req.body.amount}}, {new: true}); 
             // create the transaction
             const transaction = await Transaction.create({sender: updatedSender._id, recipient: updatedRecipient._id, amount: req.body.amount}); 
             return res.status(200).send({messsage: "Succesfully completed transaction", amount: req.body.amount, balance: updatedSender.balance}); 
 
         }
         catch (err) {
-            return res.status(400).send({message: "Unable to complete transaction", error: err})
+            return res.status(400).send({message: "Unable to complete transaction", error: err}); 
         }
     }
     else {
@@ -34,11 +34,11 @@ router.post('/send', passport.authenticate('jwt', {session: false}), async (req,
 router.post('/add-balance', passport.authenticate('jwt', {session: false}), async (req, res) => {
     const sender = req.user; 
     try {
-        const updateUserBalance = await  User.findOneAndUpdate({email: sender.email}, {$inc: {balance: req.body.amount}}, {new: true})
-        return res.status(200).send({message: "Successfully updated your balance", balance: updateUserBalance.balance})
+        const updateUserBalance = await User.findOneAndUpdate({username: sender.username}, {$inc: {balance: req.body.amount}}, {new: true});
+        return res.status(200).send({message: "Successfully updated your balance", balance: updateUserBalance.balance});
     }
     catch (err) {
-        return res.status(400).send({message: "Unable to update balance at this time! Please try again later"})
+        return res.status(400).send({message: "Unable to update balance at this time! Please try again later"});
     }
 })
 
