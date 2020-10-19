@@ -67,7 +67,9 @@ router.get('/search-query', passport.authenticate('jwt', {session: false}), asyn
     try {
         const sender = req.user; 
         // find all users with a username that matches the query
-        const allUsers = await User.find({username: { $regex: req.body.query, $options: "i" }}); 
+        const allUsers = await User.find({username: { $regex: req.query.query, $options: "i" }}); 
+        console.log("query here", typeof req.query.query, req.query.query)
+        console.log(allUsers)
         // now iterate through the array of users, removing any sensitive information, and also removing the user 
         let ret = []
         if (allUsers.length > 0) {
