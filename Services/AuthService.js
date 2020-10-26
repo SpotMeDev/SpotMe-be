@@ -51,9 +51,12 @@ class AuthService {
                 
                 // now check the status of their friendship in the friends collection
                 const senderFriend = await Friends.findOne({requester: sender._id, recipient: recipient._id}); 
-                // then return the status of the sender's friendship with the recipient 
-                // will be either 1, 2, or 3
-                return senderFriend.status
+                if (senderFriend) {
+                    // then return the status of the sender's friendship with the recipient 
+                    // will be either 1, 2, or 3
+                    return senderFriend.status
+                }
+                return 0; 
     
             }
             else {
