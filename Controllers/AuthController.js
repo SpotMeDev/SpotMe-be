@@ -6,11 +6,11 @@ const bcrypt = require('bcrypt');
 const passport = require('passport');
 const utils = require('../utils.js'); 
 const Friends = require('../models/friends');
+const authService = require("../Services/AuthService"); 
 
 mongoose.connect("mongodb://localhost/spotme_db", {useNewUrlParser: true}); 
 mongoose.set('useFindAndModify', false);
 
-const authService = require("../Services/AuthService"); 
 const AuthService = new authService()
 
 router.post("/signup", async (req, res) => {
@@ -46,6 +46,9 @@ router.post('/login', (req, res) => {
         if (err) {
             return res.status(401).send({message: "Incorrect username or password. Please try again!"}); 
         }
+        if (!user) {   
+            return res.status(403).send({message: "Incorrect username or password. Please try again!"})
+        }
         bcrypt.compare(req.body.password, user.password, (err, isMatch) => {
                 if (err) {
                     return res.status(401).send({message: "Unable to log in"})
@@ -56,7 +59,7 @@ router.post('/login', (req, res) => {
                     return res.status(200).send({message: "Successfully logged in", token: jwt.token, expiresIn: jwt.expires, user: retUser})
                 }
                 else {
-                    return res.status(401).send({message: "Incorrect usernmae or password"})
+                    return res.status(401).send({message: "Incorrect username or password"})
                 }
             })
     })
@@ -68,8 +71,6 @@ router.get('/search-query', passport.authenticate('jwt', {session: false}), asyn
         const sender = req.user; 
         // find all users with a username that matches the query
         const allUsers = await User.find({username: { $regex: req.query.query, $options: "i" }}); 
-        console.log("query here", typeof req.query.query, req.query.query)
-        console.log(allUsers)
         // now iterate through the array of users, removing any sensitive information, and also removing the user 
         let ret = []
         if (allUsers.length > 0) {
@@ -85,23 +86,34 @@ router.get('/search-query', passport.authenticate('jwt', {session: false}), asyn
     }
 })
 
+router.get('/is-friend', passport.authenticate('jwt', {session: false}), async (req, res) => {
+    try {
+        const sender = req.user; 
+        const friendStatus = await AuthService.friendStatus(sender._id, req.query.rID);
+        return res.status(200).send({message: "Sucessfully determined friend status", status: friendStatus})
+    }   
+    catch(err) {
+        return res.status(400).send({message: "Unable to determine status of friendship at this time!"});
+    }
+    
+})
+
 router.post('/add-friend', passport.authenticate('jwt', {session: false}), async (req, res) => {
     // create the two friend schemas for the user sending request and also the recipient 
     try {
         // get the sender and recipient user obj
         const sender = req.user;
-        const recipient = await User.findOne({username: req.body.recipientUsername}); 
+        const recipient = await User.findById(req.body.recipientID); 
 
         // update friend schema to reflect sending 
         const senderFriendReq = await Friends.findOneAndUpdate({requester: sender._id, recipient: recipient._id}, {$set: {status: 1} } ,{new: true, upsert: true})
         const recipientFriendReq = await Friends.findOneAndUpdate({requester: recipient._id, recipient: sender._id}, {$set: {status: 2}}, {new: true, upsert: true})
 
         // update the user objects
+        const newSender = await User.findOneAndUpdate({_id: sender._id}, {$push: {friends: senderFriendReq._id} }, {new: true})
+        const newRecipient = await User.findOneAndUpdate({_id: recipient._id}, {$push: {friends: recipientFriendReq._id} }, {new: true})
 
-        const newSender = await User.findOneAndUpdate({username: sender.username}, {$push: {friends: senderFriendReq._id} }, {new: true})
-        const newRecipient = await User.findOneAndUpdate({username: recipient.username}, {$push: {friends: recipientFriendReq._id} }, {new: true})
-
-        const retUser = {name: newSender.name, username: newSender.username, email: newSender.email, balance: newSender.balance}
+        const retUser = {id: newSender._id ,name: newSender.name, username: newSender.username, email: newSender.email, balance: newSender.balance}
 
         return res.status(200).send({message: "Successfully sent friend request!", user: retUser})
     }
