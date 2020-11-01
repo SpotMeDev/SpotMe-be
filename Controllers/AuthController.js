@@ -98,6 +98,17 @@ router.get('/is-friend', passport.authenticate('jwt', {session: false}), async (
     
 })
 
+router.get('/all-friends', async (req, res) => {
+    try {
+        const id = req.query.id; 
+        const friends = await AuthService.allFriends(id); 
+        return res.status(200).send({message: "Successfully found all the friends of the user", friends: friends})
+    }
+    catch(err) {
+        return res.status(400).send({messsage: "Unable to find user's friends at this time!"})
+    }
+})
+
 router.post('/add-friend', passport.authenticate('jwt', {session: false}), async (req, res) => {
     // create the two friend schemas for the user sending request and also the recipient 
     try {
@@ -126,7 +137,7 @@ router.post('/add-friend', passport.authenticate('jwt', {session: false}), async
 router.post('/handle-friend-request', passport.authenticate('jwt', {session: false}), async (req, res) => {
     try {
         const sender = req.user; 
-        const recipient = await User.findOne({username: req.body.recipientUsername}); 
+        const recipient = await User.findById(req.body.recipientID); 
         if (req.body.acceptedRequest === "true") {
             // update the friends schema 
             const updateSenderFriend = await Friends.findOneAndUpdate({requester: sender._id, recipient: recipient._id}, {$set: {status: 3}}); 
@@ -139,8 +150,8 @@ router.post('/handle-friend-request', passport.authenticate('jwt', {session: fal
             const remRecipient = await Friends.findOneAndRemove({requester: recipient._id, recipient: sender._id})
 
             // remove the friends from each of the user's objects 
-            const updatedSender = await User.findOneAndUpdate({username: sender.username}, {$pull: {friends: remSender._id}}, {new: true});
-            const updatedRecipient = await User.findOneAndUpdate({username: recipient.username}, {$pull: {friends: remRecipient._id}}, {new: true})
+            const updatedSender = await User.findOneAndUpdate({_id: sender._id}, {$pull: {friends: remSender._id}}, {new: true});
+            const updatedRecipient = await User.findOneAndUpdate({_id: recipient._id}, {$pull: {friends: remRecipient._id}}, {new: true})
 
             return res.status(200).send({message: "Succesfully declined friend request", user: updatedSender}); 
 
