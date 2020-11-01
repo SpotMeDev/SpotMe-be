@@ -32,7 +32,7 @@ router.post("/signup", async (req, res) => {
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
         const newUser = await User.create({name: req.body.name, username: req.body.username, email: req.body.email, password: hashedPassword, balance: 0})
         const jwt = utils.issueJWT(newUser);
-        const retUser = {id: newUser.id, name: newUser.name, username: newUser.username, email: newUser.email, balance: newUser.balance};  
+        const retUser = {id: newUser.id, name: newUser.name, username: newUser.username, email: newUser.email, balance: newUser.balance, friends: newUser.friends};  
         return res.status(200).send({message: "Successfully signed up the user!", token: jwt.token, expiresIn: jwt.expires, user: retUser})
     }
     catch (err) {
@@ -55,7 +55,7 @@ router.post('/login', (req, res) => {
                 }
                 if (isMatch) {
                     const jwt = utils.issueJWT(user); 
-                    const retUser = {id: user.id, name: user.name, username: user.username, email: user.email, balance: user.balance }
+                    const retUser = {id: user.id, name: user.name, username: user.username, email: user.email, balance: user.balance, friends: user.friends}
                     return res.status(200).send({message: "Successfully logged in", token: jwt.token, expiresIn: jwt.expires, user: retUser})
                 }
                 else {
@@ -63,6 +63,43 @@ router.post('/login', (req, res) => {
                 }
             })
     })
+})
+
+// route specifically for username or name, seperate route for password 
+router.post("/change-account", passport.authenticate('jwt', {session: false}), async (req, res) => {
+    const user = req.user;
+    const type = req.body.updateType;  
+    const newField = req.body.updatedField; 
+    console.log(type)
+    if (type == "name") {
+        if (user.name == newField || newField == "") {
+            return res.status(400).send({message: "Please select a new name that is at least 1 character long!"}); 
+        }
+        try {
+            const updatedUser = await User.findOneAndUpdate({_id: user._id}, {$set: {name: newField} },{new: true}); 
+            return res.status(200).send({message: "Succesfully updated name", user: {id: updatedUser._id, friends: updatedUser.friends, name: updatedUser.name, username: updatedUser.username, email: updatedUser.email, balance: updatedUser.balance}}); 
+        }
+        catch(err) {
+            return res.status(400).send({message: "Unable to update name at this time!"})
+        }
+    }
+    else if (type == "username") {
+        // handle username change here
+        if (user.username == newField || newField == "") {
+            return res.status(400).send({message: "Please select a new username that is at least 1 character long!"}); 
+        }
+        try {
+            const updatedUser = await User.findOneAndUpdate({_id: user._id}, {$set: {username: newField} },{new: true}); 
+            return res.status(200).send({message: "Succesfully updated username", user: {id: updatedUser._id, friends: updatedUser.friends, name: updatedUser.name, username: updatedUser.username, email: updatedUser.email, balance: updatedUser.balance}}); 
+        }
+        catch(err) {
+            return res.status(400).send({message: "Unable to update username at this time!"})
+        }
+    }
+    else {
+        return res.status(400).send({message: "Unable to update account information!"})
+    }
+
 })
 
 
@@ -75,7 +112,7 @@ router.get('/search-query', passport.authenticate('jwt', {session: false}), asyn
         let ret = []
         if (allUsers.length > 0) {
             allUsers.forEach(user => {
-                const retUser = {_id: user.id, name: user.name, username: user.username, email: user.email}; 
+                const retUser = {_id: user.id, name: user.name, username: user.username, email: user.email, friends: user.friends}; 
                 ret.push(retUser); 
             })
         }
@@ -124,7 +161,7 @@ router.post('/add-friend', passport.authenticate('jwt', {session: false}), async
         const newSender = await User.findOneAndUpdate({_id: sender._id}, {$push: {friends: senderFriendReq._id} }, {new: true})
         const newRecipient = await User.findOneAndUpdate({_id: recipient._id}, {$push: {friends: recipientFriendReq._id} }, {new: true})
 
-        const retUser = {id: newSender._id ,name: newSender.name, username: newSender.username, email: newSender.email, balance: newSender.balance}
+        const retUser = {id: newSender._id ,name: newSender.name, username: newSender.username, email: newSender.email, balance: newSender.balance, friends: newSender.friends}
 
         return res.status(200).send({message: "Successfully sent friend request!", user: retUser})
     }
@@ -153,7 +190,7 @@ router.post('/handle-friend-request', passport.authenticate('jwt', {session: fal
             const updatedSender = await User.findOneAndUpdate({_id: sender._id}, {$pull: {friends: remSender._id}}, {new: true});
             const updatedRecipient = await User.findOneAndUpdate({_id: recipient._id}, {$pull: {friends: remRecipient._id}}, {new: true})
 
-            return res.status(200).send({message: "Succesfully declined friend request", user: updatedSender}); 
+            return res.status(200).send({message: "Succesfully declined friend request", user: {id: updatedSender._id, friends: updatedSender.friends, name: updatedSender.name, username: updatedSender.username, email: updatedSender.email, balance: updatedSender.balance }}); 
 
         }
     }
