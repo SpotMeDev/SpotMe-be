@@ -103,6 +103,41 @@ router.post("/change-account", passport.authenticate('jwt', {session: false}), a
 })
 
 
+// route specifically to change password 
+router.post('/change-password', passport.authenticate('jwt', {session: false}), async(req, res) => {
+    const user = req.user; 
+    if (req.body.currentPasword == "" || req.body.newPassword == "" || req.body.confirmPassword == "") {
+        return res.status(400).send({message: "Passwords can't be empty"}); 
+    }
+    if (req.body.newPassword != req.body.confirmPassword) {
+        return res.status(400).send({message: "New Password and Confirm Password must match" }); 
+    }
+    if (req.body.currentPasword == req.body.newPassword) {
+        return res.status(400).send({message: "New password must be different from the current password!" }); 
+    }
+
+    bcrypt.compare(req.body.currentPasword, user.password, async (err, isMatch) => {
+        if (err) {
+            return res.status(401).send({message: "Unable to change password!"}); 
+        }
+        if (!isMatch) {
+            return res.status(403).send({message: "Current Password does not match the user"}); 
+        }
+        try {
+            // create a hash of the new password
+            const hashedPassword = await bcrypt.hash(req.body.newPassword, 10)
+            const newUser = await User.findOneAndUpdate({_id: user._id}, {$set: {password: hashedPassword}}, {new: true}); 
+            return res.status(200).send({message: "Succesfully updated password!"}); 
+        } catch(err) {
+            return res.status(400).send({message: "Unable to change password at this time!"}); 
+        }
+     })
+})
+
+
+
+
+
 router.get('/search-query', passport.authenticate('jwt', {session: false}), async (req, res) => {
     try {
         const sender = req.user; 
