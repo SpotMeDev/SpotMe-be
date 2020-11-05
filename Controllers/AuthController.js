@@ -70,7 +70,6 @@ router.post("/change-account", passport.authenticate('jwt', {session: false}), a
     const user = req.user;
     const type = req.body.updateType;  
     const newField = req.body.updatedField; 
-    console.log(type)
     if (type == "name") {
         if (user.name == newField || newField == "") {
             return res.status(400).send({message: "Please select a new name that is at least 1 character long!"}); 
@@ -214,7 +213,7 @@ router.post('/handle-friend-request', passport.authenticate('jwt', {session: fal
             // update the friends schema 
             const updateSenderFriend = await Friends.findOneAndUpdate({requester: sender._id, recipient: recipient._id}, {$set: {status: 3}}); 
             const updateRecipientFriend = await Friends.findOneAndUpdate({requester: recipient._id, recipient: sender._id}, {$set: {status: 3}})
-            return res.status(200).send({message: "Successfully accepted friend request!"})
+            return res.status(200).send({message: "Successfully accepted friend request!", user: {id: sender._id, friends: sender.friends, name: sender.name, username: sender.username, email: sender.email, balance: sender.balance }})
         }
         else {
             // delete the friend relationship between if the request has been declined  
