@@ -1,15 +1,12 @@
 const express = require('express'); 
 const router = express.Router(); 
 const User = require('../models/user'); 
-const mongoose = require('mongoose'); 
 const bcrypt = require('bcrypt'); 
 const passport = require('passport');
 const utils = require('../utils.js'); 
 const Friends = require('../models/friends');
 const authService = require("../Services/AuthService"); 
 
-mongoose.connect("mongodb://localhost/spotme_db", {useNewUrlParser: true}); 
-mongoose.set('useFindAndModify', false);
 
 const AuthService = new authService()
 

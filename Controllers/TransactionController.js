@@ -2,12 +2,7 @@ const express = require('express');
 const router = express.Router(); 
 const User = require('../models/user'); 
 const Transaction = require('../models/transaction'); 
-const mongoose = require('mongoose'); 
 const passport = require('passport');
-
-mongoose.connect("mongodb://localhost/spotme_db", {useNewUrlParser: true}); 
-mongoose.set('useFindAndModify', false);
-
 
 router.post('/send', passport.authenticate('jwt', {session: false}), async (req, res) => {
     // check that the user has enough in their current balance to make that transaction

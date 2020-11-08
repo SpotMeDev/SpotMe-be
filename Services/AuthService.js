@@ -5,7 +5,6 @@ class AuthService {
 
     // check if user exists with given email
     userWithEmail = async (email) => {
-        console.log(email)
         try {
             // check that email is not already used 
             const userExists = await User.findOne({email: email}); 

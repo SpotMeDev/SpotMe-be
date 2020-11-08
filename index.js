@@ -10,8 +10,13 @@ const authRouter = require('./Controllers/AuthController');
 const transactionRouter = require('./Controllers/TransactionController')
 const passport = require('passport');
 const session = require('express-session'); 
+const mongoose = require('mongoose'); 
 const initializePassport = require('./passport-config'); 
 initializePassport(passport); 
+
+// Connect Database 
+mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@spotme.lidfh.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`, {useNewUrlParser: true}); 
+mongoose.set('useFindAndModify', false);
 
 // Body parser 
 app.use(bodyParser.json())
