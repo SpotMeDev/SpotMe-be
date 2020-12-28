@@ -9,7 +9,6 @@ const port = process.env.PORT || 8080;
 const authRouter = require('./Controllers/AuthController'); 
 const transactionRouter = require('./Controllers/TransactionController')
 const passport = require('passport');
-const session = require('express-session'); 
 const mongoose = require('mongoose'); 
 const initializePassport = require('./passport-config'); 
 initializePassport(passport); 

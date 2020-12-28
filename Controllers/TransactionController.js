@@ -16,9 +16,11 @@ router.post('/send', passport.authenticate('jwt', {session: false}), async (req,
         try {
             const updatedSender = await User.findOneAndUpdate({_id: sender._id}, {$inc: {balance: -req.body.amount}}, {new: true});
             const updatedRecipient = await User.findOneAndUpdate({_id: req.body.recipientID}, {$inc: {balance: req.body.amount}}, {new: true}); 
+            
+            const retUser = {id: updatedSender._id, name: updatedSender.name, username: updatedSender.username, email: updatedSender.email, balance: updatedSender.balance, friends: updatedSender.friends}
             // create the transaction
             const transaction = await Transaction.create({sender: updatedSender._id, recipient: updatedRecipient._id, amount: req.body.amount, message: req.body.message}); 
-            return res.status(200).send({messsage: "Succesfully completed transaction", amount: req.body.amount, balance: updatedSender.balance}); 
+            return res.status(200).send({messsage: "Succesfully completed transaction", amount: req.body.amount, user: retUser}); 
 
         }
         catch (err) {
@@ -34,7 +36,8 @@ router.post('/add-balance', passport.authenticate('jwt', {session: false}), asyn
     const sender = req.user; 
     try {
         const updateUserBalance = await User.findOneAndUpdate({_id: sender._id}, {$inc: {balance: req.body.amount}}, {new: true});
-        return res.status(200).send({message: "Successfully updated your balance", balance: updateUserBalance.balance});
+        const retUser = {id: updateUserBalance._id, name: updateUserBalance.name, username: updateUserBalance.username, email: updateUserBalance.email, balance: updateUserBalance.balance, friends: updateUserBalance.friends}
+        return res.status(200).send({message: "Successfully updated your balance", user: retUser});
     }
     catch (err) {
         return res.status(400).send({message: "Unable to update balance at this time! Please try again later"});
