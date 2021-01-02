@@ -116,6 +116,18 @@ class AuthService {
         const base64 = Base64.arrayBufferToBase64(profileImg.img.data.buffer)
         return base64
     }
+    // given a user, function returns user object details excluding password 
+    returnUserDetails = async (user, includeProfilePic = false) => {
+        if (includeProfilePic) {
+            const profilePic64 = await this.retrieveProfilePic(user)
+            return {id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance, img: profilePic64}
+        }
+        else {
+            return {id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance}
+
+        }
+    }
+
 }
 
 

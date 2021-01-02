@@ -3,6 +3,8 @@ const router = express.Router();
 const User = require('../models/user'); 
 const Transaction = require('../models/transaction'); 
 const passport = require('passport');
+const transactionService = require('../Services/TransactionService'); 
+const TransactionService = new transactionService(); 
 
 router.post('/send', passport.authenticate('jwt', {session: false}), async (req, res) => {
     // check that the user has enough in their current balance to make that transaction
@@ -41,6 +43,18 @@ router.post('/add-balance', passport.authenticate('jwt', {session: false}), asyn
     }
     catch (err) {
         return res.status(400).send({message: "Unable to update balance at this time! Please try again later"});
+    }
+})
+
+
+router.get('/user-transactions', passport.authenticate('jwt', {session: false}), async (req, res) => {
+    try {
+        const user = req.user;  
+        const transactions = await TransactionService.allUserTransactions(user); 
+        return res.status(200).send({message: "Succesfully retrieved user transactions", transactions: transactions})
+    }
+    catch(err) {
+        return res.status(400).send({message: "Unable to get user transactions at this time"})
     }
 })
 
