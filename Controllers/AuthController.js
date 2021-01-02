@@ -73,7 +73,8 @@ router.post("/change-account", passport.authenticate('jwt', {session: false}), a
         }
         try {
             const updatedUser = await User.findOneAndUpdate({_id: user._id}, {$set: {name: newField} },{new: true}); 
-            return res.status(200).send({message: "Succesfully updated name", user: {id: updatedUser._id, friends: updatedUser.friends, name: updatedUser.name, username: updatedUser.username, email: updatedUser.email, balance: updatedUser.balance}}); 
+            const profilePic64 = await AuthService.retrieveProfilePic(updatedUser); 
+            return res.status(200).send({message: "Succesfully updated name", user: {id: updatedUser._id, friends: updatedUser.friends, name: updatedUser.name, username: updatedUser.username, email: updatedUser.email, balance: updatedUser.balance, img: profilePic64}}); 
         }
         catch(err) {
             return res.status(400).send({message: "Unable to update name at this time!"})
@@ -85,8 +86,9 @@ router.post("/change-account", passport.authenticate('jwt', {session: false}), a
             return res.status(400).send({message: "Please select a new username that is at least 1 character long!"}); 
         }
         try {
-            const updatedUser = await User.findOneAndUpdate({_id: user._id}, {$set: {username: newField} },{new: true}); 
-            return res.status(200).send({message: "Succesfully updated username", user: {id: updatedUser._id, friends: updatedUser.friends, name: updatedUser.name, username: updatedUser.username, email: updatedUser.email, balance: updatedUser.balance}}); 
+            const updatedUser = await User.findOneAndUpdate({_id: user._id}, {$set: {username: newField} },{new: true});
+            const profilePic64 = await AuthService.retrieveProfilePic(updatedUser);  
+            return res.status(200).send({message: "Succesfully updated username", user: {id: updatedUser._id, friends: updatedUser.friends, name: updatedUser.name, username: updatedUser.username, email: updatedUser.email, balance: updatedUser.balance, img: profilePic64}}); 
         }
         catch(err) {
             return res.status(400).send({message: "Unable to update username at this time!"})
