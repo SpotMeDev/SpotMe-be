@@ -6,8 +6,6 @@ const passport = require('passport');
 const utils = require('../utils.js'); 
 const Friends = require('../models/friends');
 const authService = require("../Services/AuthService"); 
-
-
 const AuthService = new authService()
 
 router.post("/signup", async (req, res) => {
@@ -46,13 +44,15 @@ router.post('/login', (req, res) => {
         if (!user) {   
             return res.status(403).send({message: "Incorrect username or password. Please try again!"})
         }
-        bcrypt.compare(req.body.password, user.password, (err, isMatch) => {
+        bcrypt.compare(req.body.password, user.password, async (err, isMatch) => {
                 if (err) {
                     return res.status(401).send({message: "Unable to log in"})
                 }
                 if (isMatch) {
                     const jwt = utils.issueJWT(user); 
-                    const retUser = {id: user.id, name: user.name, username: user.username, email: user.email, balance: user.balance, friends: user.friends}
+                    // grab user profile picture 
+                    const profilePic64 = await AuthService.retrieveProfilePic(user); 
+                    const retUser = {id: user.id, name: user.name, username: user.username, email: user.email, balance: user.balance, friends: user.friends, img: profilePic64}
                     return res.status(200).send({message: "Successfully logged in", token: jwt.token, expiresIn: jwt.expires, user: retUser})
                 }
                 else {

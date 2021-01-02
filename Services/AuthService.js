@@ -1,7 +1,8 @@
 const User = require('../models/user'); 
 const Friends = require('../models/friends'); 
 const Image = require('../models/image'); 
-
+const base64 = require('../services/Base64')
+const Base64 = new base64() 
 class AuthService {
 
     // check if user exists with given email
@@ -112,7 +113,8 @@ class AuthService {
         const imgID = user.profileImg; 
         // use the object ID to find the correct image document 
         const profileImg = await Image.findById(imgID); 
-        return profileImg
+        const base64 = Base64.arrayBufferToBase64(profileImg.img.data.buffer)
+        return base64
     }
 }
 
