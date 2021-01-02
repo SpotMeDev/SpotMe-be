@@ -1,5 +1,6 @@
 const User = require('../models/user'); 
 const Friends = require('../models/friends'); 
+const Image = require('../models/image'); 
 
 class AuthService {
 
@@ -95,6 +96,19 @@ class AuthService {
 
     }
 
+    updateProfilePic = async (user, data) => {
+        const buffer = Buffer.from(data, 'base64');
+        const newImage = await Image.create({img: {data: buffer, contentType: "img/jpeg"}}); 
+        const newUser = await User.findOneAndUpdate({_id: user._id}, {$set: {profileImg: newImage._id}}, {new: true}); 
+        return newImage; 
+    }
+    
+    retrieveProfilePic = async (user) => {
+        const imgID = user.profileImg; 
+        // use the object ID to find the correct image document 
+        const profileImg = await Image.findById(imgID); 
+        return profileImg
+    }
 }
 
 

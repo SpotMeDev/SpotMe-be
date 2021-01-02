@@ -10,7 +10,8 @@ const userSchema = mongoose.Schema({
     friends: [{
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Friends'
-    }]
+    }], 
+    profileImg: {type: mongoose.Schema.Types.ObjectId, ref: "Image"}
 })
 
 

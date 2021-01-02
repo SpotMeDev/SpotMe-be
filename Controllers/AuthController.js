@@ -131,7 +131,31 @@ router.post('/change-password', passport.authenticate('jwt', {session: false}), 
 })
 
 
+router.post('/update-profile-pic', passport.authenticate('jwt', {session: false}), async (req, res) => {
+    try {
+        const user = req.user; 
+        if (req.body.profileData64) {
+            const retImage = await AuthService.updateProfilePic(user, req.body.profileData64); 
+            const retUser = {_id: user.id, name: user.name, username: user.username, email: user.email, friends: user.friends, img: retImage.img}; 
+            return res.status(200).send({message: "Successfully updated profile picture", user: retUser, data: retImage})
+        }
+        else {
+            return res.status(400).send({message: "Must include valid profile picture"})
+        }
+    }
+    catch (err) {
+        return res.status(400).send({message: "Unable to update profile picture at this time!"})
+    }
+})
 
+router.get("/profile-pic", passport.authenticate('jwt', {session: false}), async (req, res) => {
+    const user = req.user; 
+    try  {
+        return await AuthService.retrieveProfilePic(user); 
+    } catch (err) {
+        return res.status(400).send({message: "Unable to retrive user's profile picture"})
+    }
+})
 
 
 router.get('/search-query', passport.authenticate('jwt', {session: false}), async (req, res) => {
