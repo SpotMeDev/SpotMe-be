@@ -135,9 +135,16 @@ router.post('/update-profile-pic', passport.authenticate('jwt', {session: false}
     try {
         const user = req.user; 
         if (req.body.profileData64) {
-            const retImage = await AuthService.updateProfilePic(user, req.body.profileData64); 
-            const retUser = {_id: user.id, name: user.name, username: user.username, email: user.email, friends: user.friends, img: retImage.img}; 
-            return res.status(200).send({message: "Successfully updated profile picture", user: retUser, data: retImage})
+            // do we need this extra ret64 computation if we already have the profileData64?
+            const upload = await AuthService.updateProfilePic(user, req.body.profileData64); 
+            if (upload) {
+                const retUser = {_id: user.id, name: user.name, username: user.username, email: user.email, friends: user.friends, img: req.body.profileData64}; 
+                return res.status(200).send({message: "Successfully updated profile picture", user: retUser})
+            }
+            else {
+                // error uploading the profile picture 
+                return res.status(400).send({message: "Unable to update profile picture at this time"})
+            }
         }
         else {
             return res.status(400).send({message: "Must include valid profile picture"})

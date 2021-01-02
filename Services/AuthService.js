@@ -97,10 +97,15 @@ class AuthService {
     }
 
     updateProfilePic = async (user, data) => {
-        const buffer = Buffer.from(data, 'base64');
-        const newImage = await Image.create({img: {data: buffer, contentType: "img/jpeg"}}); 
-        const newUser = await User.findOneAndUpdate({_id: user._id}, {$set: {profileImg: newImage._id}}, {new: true}); 
-        return newImage; 
+        try {
+            const buffer = Buffer.from(data, 'base64');
+            const newImage = await Image.create({img: {data: buffer, contentType: "img/jpeg"}}); 
+            const newUser = await User.findOneAndUpdate({_id: user._id}, {$set: {profileImg: newImage._id}}, {new: true}); 
+            return true; 
+        }
+        catch (err) {
+            return false; 
+        }
     }
     
     retrieveProfilePic = async (user) => {
