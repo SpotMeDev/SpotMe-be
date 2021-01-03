@@ -113,8 +113,13 @@ class AuthService {
         const imgID = user.profileImg; 
         // use the object ID to find the correct image document 
         const profileImg = await Image.findById(imgID); 
-        const base64 = Base64.arrayBufferToBase64(profileImg.img.data.buffer)
-        return base64
+        if (profileImg) {
+            const base64 = Base64.arrayBufferToBase64(profileImg.img.data.buffer)
+            return base64
+        }
+        else {
+            return ""
+        }
     }
     // given a user, function returns user object details excluding password 
     returnUserDetails = async (user, includeProfilePic = false) => {

@@ -27,7 +27,7 @@ router.post("/signup", async (req, res) => {
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
         const newUser = await User.create({name: req.body.name, username: req.body.username, email: req.body.email, password: hashedPassword, balance: 0})
         const jwt = utils.issueJWT(newUser);
-        const retUser = {id: newUser.id, name: newUser.name, username: newUser.username, email: newUser.email, balance: newUser.balance, friends: newUser.friends};  
+        const retUser = await AuthService.returnUserDetails(newUser, true); 
         return res.status(200).send({message: "Successfully signed up the user!", token: jwt.token, expiresIn: jwt.expires, user: retUser})
     }
     catch (err) {
@@ -52,7 +52,7 @@ router.post('/login', (req, res) => {
                     const jwt = utils.issueJWT(user); 
                     // grab user profile picture 
                     const profilePic64 = await AuthService.retrieveProfilePic(user); 
-                    const retUser = {id: user.id, name: user.name, username: user.username, email: user.email, balance: user.balance, friends: user.friends, img: profilePic64}
+                    const retUser = await AuthService.returnUserDetails(user, true); 
                     return res.status(200).send({message: "Successfully logged in", token: jwt.token, expiresIn: jwt.expires, user: retUser})
                 }
                 else {
@@ -73,8 +73,8 @@ router.post("/change-account", passport.authenticate('jwt', {session: false}), a
         }
         try {
             const updatedUser = await User.findOneAndUpdate({_id: user._id}, {$set: {name: newField} },{new: true}); 
-            const profilePic64 = await AuthService.retrieveProfilePic(updatedUser); 
-            return res.status(200).send({message: "Succesfully updated name", user: {id: updatedUser._id, friends: updatedUser.friends, name: updatedUser.name, username: updatedUser.username, email: updatedUser.email, balance: updatedUser.balance, img: profilePic64}}); 
+            const retUser = await AuthService.returnUserDetails(updatedUser, true); 
+            return res.status(200).send({message: "Succesfully updated name", user: retUser }); 
         }
         catch(err) {
             return res.status(400).send({message: "Unable to update name at this time!"})
@@ -87,8 +87,8 @@ router.post("/change-account", passport.authenticate('jwt', {session: false}), a
         }
         try {
             const updatedUser = await User.findOneAndUpdate({_id: user._id}, {$set: {username: newField} },{new: true});
-            const profilePic64 = await AuthService.retrieveProfilePic(updatedUser);  
-            return res.status(200).send({message: "Succesfully updated username", user: {id: updatedUser._id, friends: updatedUser.friends, name: updatedUser.name, username: updatedUser.username, email: updatedUser.email, balance: updatedUser.balance, img: profilePic64}}); 
+            const retUser = await AuthService.returnUserDetails(updatedUser, true); 
+            return res.status(200).send({message: "Succesfully updated username", user: retUser}); 
         }
         catch(err) {
             return res.status(400).send({message: "Unable to update username at this time!"})
@@ -140,7 +140,7 @@ router.post('/update-profile-pic', passport.authenticate('jwt', {session: false}
             // do we need this extra ret64 computation if we already have the profileData64?
             const upload = await AuthService.updateProfilePic(user, req.body.profileData64); 
             if (upload) {
-                const retUser = {_id: user.id, name: user.name, username: user.username, email: user.email, friends: user.friends, img: req.body.profileData64}; 
+                const retUser = await AuthService.returnUserDetails(user, true); 
                 return res.status(200).send({message: "Successfully updated profile picture", user: retUser})
             }
             else {
@@ -175,10 +175,11 @@ router.get('/search-query', passport.authenticate('jwt', {session: false}), asyn
         // now iterate through the array of users, removing any sensitive information, and also removing the user 
         let ret = []
         if (allUsers.length > 0) {
-            allUsers.forEach(user => {
-                const retUser = {_id: user.id, name: user.name, username: user.username, email: user.email, friends: user.friends}; 
+
+            await Promise.all(allUsers.map(async (user) => { 
+                const retUser = await AuthService.returnUserDetails(user); 
                 ret.push(retUser); 
-            })
+            }))
         }
         return res.status(200).send({message: "Successfully retrieved all users with the query", users: ret})
     }
@@ -224,8 +225,7 @@ router.post('/add-friend', passport.authenticate('jwt', {session: false}), async
         // update the user objects
         const newSender = await User.findOneAndUpdate({_id: sender._id}, {$push: {friends: senderFriendReq._id} }, {new: true})
         const newRecipient = await User.findOneAndUpdate({_id: recipient._id}, {$push: {friends: recipientFriendReq._id} }, {new: true})
-
-        const retUser = {id: newSender._id ,name: newSender.name, username: newSender.username, email: newSender.email, balance: newSender.balance, friends: newSender.friends}
+        const retUser = await AuthService.returnUserDetails(newSender, true); 
 
         return res.status(200).send({message: "Successfully sent friend request!", user: retUser})
     }
@@ -243,7 +243,8 @@ router.post('/handle-friend-request', passport.authenticate('jwt', {session: fal
             // update the friends schema 
             const updateSenderFriend = await Friends.findOneAndUpdate({requester: sender._id, recipient: recipient._id}, {$set: {status: 3}}); 
             const updateRecipientFriend = await Friends.findOneAndUpdate({requester: recipient._id, recipient: sender._id}, {$set: {status: 3}})
-            return res.status(200).send({message: "Successfully accepted friend request!", user: {id: sender._id, friends: sender.friends, name: sender.name, username: sender.username, email: sender.email, balance: sender.balance }})
+            const retUser = await AuthService.returnUserDetails(sender, true); 
+            return res.status(200).send({message: "Successfully accepted friend request!", user: retUser})
         }
         else {
             // delete the friend relationship between if the request has been declined  
@@ -253,8 +254,8 @@ router.post('/handle-friend-request', passport.authenticate('jwt', {session: fal
             // remove the friends from each of the user's objects 
             const updatedSender = await User.findOneAndUpdate({_id: sender._id}, {$pull: {friends: remSender._id}}, {new: true});
             const updatedRecipient = await User.findOneAndUpdate({_id: recipient._id}, {$pull: {friends: remRecipient._id}}, {new: true})
-
-            return res.status(200).send({message: "Succesfully declined friend request", user: {id: updatedSender._id, friends: updatedSender.friends, name: updatedSender.name, username: updatedSender.username, email: updatedSender.email, balance: updatedSender.balance }}); 
+            const retUser = await AuthService.returnUserDetails(updatedSender, true); 
+            return res.status(200).send({message: "Succesfully declined friend request", user: retUser}); 
 
         }
     }

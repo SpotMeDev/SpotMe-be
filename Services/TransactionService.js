@@ -1,3 +1,4 @@
+const { all } = require('../Controllers/AuthController');
 const Transaction = require('../models/transaction')
 const User = require('../models/user'); 
 const authService = require('../Services/AuthService'); 
@@ -26,7 +27,7 @@ class TransactionService {
                 ret.push({id: transaction._id, sender: retSender, recipient: retUser, amount: transaction.amount, message: transaction.message, createdAt: transaction.createdAt, userIsSender: userIsSender})
             }
         }))
-        console.log(ret); 
+        ret.sort((a, b) => b.createdAt - a.createdAt);
         return ret; 
     }
 }

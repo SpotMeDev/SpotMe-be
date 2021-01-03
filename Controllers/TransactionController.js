@@ -3,7 +3,10 @@ const router = express.Router();
 const User = require('../models/user'); 
 const Transaction = require('../models/transaction'); 
 const passport = require('passport');
+const authService = require('../Services/AuthService'); 
+const AuthService = new authService(); 
 const transactionService = require('../Services/TransactionService'); 
+const { update } = require('../models/transaction');
 const TransactionService = new transactionService(); 
 
 router.post('/send', passport.authenticate('jwt', {session: false}), async (req, res) => {
@@ -19,7 +22,7 @@ router.post('/send', passport.authenticate('jwt', {session: false}), async (req,
             const updatedSender = await User.findOneAndUpdate({_id: sender._id}, {$inc: {balance: -req.body.amount}}, {new: true});
             const updatedRecipient = await User.findOneAndUpdate({_id: req.body.recipientID}, {$inc: {balance: req.body.amount}}, {new: true}); 
             
-            const retUser = {id: updatedSender._id, name: updatedSender.name, username: updatedSender.username, email: updatedSender.email, balance: updatedSender.balance, friends: updatedSender.friends}
+            const retUser = await AuthService.returnUserDetails(updatedSender, true); 
             // create the transaction
             const transaction = await Transaction.create({sender: updatedSender._id, recipient: updatedRecipient._id, amount: req.body.amount, message: req.body.message}); 
             return res.status(200).send({messsage: "Succesfully completed transaction", amount: req.body.amount, user: retUser}); 
@@ -38,7 +41,7 @@ router.post('/add-balance', passport.authenticate('jwt', {session: false}), asyn
     const sender = req.user; 
     try {
         const updateUserBalance = await User.findOneAndUpdate({_id: sender._id}, {$inc: {balance: req.body.amount}}, {new: true});
-        const retUser = {id: updateUserBalance._id, name: updateUserBalance.name, username: updateUserBalance.username, email: updateUserBalance.email, balance: updateUserBalance.balance, friends: updateUserBalance.friends}
+        const retUser = await AuthService.returnUserDetails(updateUserBalance, true); 
         return res.status(200).send({message: "Successfully updated your balance", user: retUser});
     }
     catch (err) {
