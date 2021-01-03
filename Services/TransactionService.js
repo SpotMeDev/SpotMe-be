@@ -12,7 +12,7 @@ class TransactionService {
         const ret = []
         await Promise.all(allTransactions.map(async (transaction) => {
             let userIsSender = false; 
-            if (transaction.sender == user._id) {
+            if (transaction.sender.equals(user._id)) {
                 const recipient = await User.findById(transaction.recipient); 
                 const retUser = await AuthService.returnUserDetails(user); 
                 const retRecipient = await AuthService.returnUserDetails(recipient); 
@@ -26,6 +26,7 @@ class TransactionService {
                 ret.push({id: transaction._id, sender: retSender, recipient: retUser, amount: transaction.amount, message: transaction.message, createdAt: transaction.createdAt, userIsSender: userIsSender})
             }
         }))
+        console.log(ret); 
         return ret; 
     }
 }
