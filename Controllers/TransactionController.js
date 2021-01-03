@@ -61,5 +61,15 @@ router.get('/user-transactions', passport.authenticate('jwt', {session: false}),
     }
 })
 
+router.get('/all-transactions', passport.authenticate('jwt', {session: false}), async (req, res) => {
+    try {
+        const user = req.user; 
+        const transactions = await TransactionService.allFriendsTransactions(user); 
+        return res.status(200).send({message: "Successfully retrieved all transactions", transactions: transactions})
+    }
+    catch (err) {
+        return res.status(400).send({message: "Unable to get user transactions at this time!"})
+    }
+})
 
 module.exports = router; 
