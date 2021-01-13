@@ -46,7 +46,6 @@ class TransactionService {
         ret.forEach(transaction => {
             set.add(transaction.id.toString())
         }); 
-        console.log(friends); 
         // now for each friend, iterate through their transactions and add to array
         await Promise.all(friends.map(async friend => {
             let newFriend = await User.findById(friend.id)
