@@ -4,8 +4,7 @@ const User = require('../models/user');
 const bcrypt = require('bcrypt'); 
 const passport = require('passport');
 const Friends = require('../models/friends');
-const authService = require("../Services/AuthService"); 
-const AuthService = new authService()
+const AuthService = require("../Services/AuthService"); 
 const TokenService = require('../Services/TokenService'); 
 
 router.post("/signup", async (req, res) => {

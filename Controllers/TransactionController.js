@@ -3,11 +3,8 @@ const router = express.Router();
 const User = require('../models/user'); 
 const Transaction = require('../models/transaction'); 
 const passport = require('passport');
-const authService = require('../Services/AuthService'); 
-const AuthService = new authService(); 
-const transactionService = require('../Services/TransactionService'); 
-const { update } = require('../models/transaction');
-const TransactionService = new transactionService(); 
+const AuthService = require('../Services/AuthService'); 
+const TransactionService = require('../Services/TransactionService'); 
 
 router.post('/send', passport.authenticate('jwt', {session: false}), async (req, res) => {
     // check that the user has enough in their current balance to make that transaction

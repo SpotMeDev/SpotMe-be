@@ -1,28 +1,28 @@
 const User = require('../models/user'); 
 const Friends = require('../models/friends'); 
 const Image = require('../models/image'); 
-const base64 = require('../services/Base64')
-const Base64 = new base64() 
-class AuthService {
+const Utils = require('../services/utils')
 
-    // check if user exists with given email
-    userWithEmail = async (email) => {
-        try {
-            // check that email is not already used 
-            const userExists = await User.findOne({email: email}); 
-            if (userExists) {
-                return true; 
+
+module.exports = {
+        // check if user exists with given email
+        userWithEmail: async (email) => {
+            try {
+                // check that email is not already used 
+                const userExists = await User.findOne({email: email}); 
+                if (userExists) {
+                    return true; 
+                }
+                else {
+                    return false;
+                }
             }
-            else {
+            catch(err) {
                 return false;
             }
-        }
-        catch(err) {
-            return false;
-        }
-    }
+        }, 
     // check if user already exists with given username
-    userWithUsername = async (username) => {
+    userWithUsername: async (username) => {
         try {
             const user = await User.findOne({username: username}); 
             if (user) {
@@ -35,14 +35,14 @@ class AuthService {
         catch(err) {
             return false; 
         }
-    }
+    }, 
 
     // function will take in the sender and recipID and then return the status of their friendship: 
     // 0 --> not friends 
     // 1 ---> user has requested 
     // 2 ---> pending friend request from recipient
     // 3 -> friends already 
-    friendStatus = async (senderId, recipientId) => {
+    friendStatus: async (senderId, recipientId) => {
         // check the friends array to see if the sender is already friends with 
         try {
             const sender = await User.findById(senderId); 
@@ -66,10 +66,10 @@ class AuthService {
         catch(err) {
             return 0; 
         }
-    }
+    }, 
 
     // function takes the user ID and returns all of the user's friends, in an array of objects 
-    allFriends = async (id) => {
+    allFriends: async (id) => {
         const user = await User.findById(id); 
         if (user) {
             // create a mongo aggregation: NEED TO IMPROVE: TOO MANY QUERIES 
@@ -95,9 +95,9 @@ class AuthService {
         }   
         return []; 
 
-    }
+    }, 
 
-    updateProfilePic = async (user, data) => {
+    updateProfilePic: async (user, data) => {
         try {
             const buffer = Buffer.from(data, 'base64');
             const newImage = await Image.create({img: {data: buffer, contentType: "img/jpeg"}}); 
@@ -107,22 +107,22 @@ class AuthService {
         catch (err) {
             return false; 
         }
-    }
+    }, 
     
-    retrieveProfilePic = async (user) => {
+    retrieveProfilePic: async (user) => {
         const imgID = user.profileImg; 
         // use the object ID to find the correct image document 
         const profileImg = await Image.findById(imgID); 
         if (profileImg) {
-            const base64 = Base64.arrayBufferToBase64(profileImg.img.data.buffer)
+            const base64 = Utils.arrayBufferToBase64(profileImg.img.data.buffer)
             return base64
         }
         else {
             return ""
         }
-    }
+    }, 
     // given a user, function returns user object details excluding password 
-    returnUserDetails = async (user, includeProfilePic = false) => {
+    returnUserDetails: async (user, includeProfilePic = false) => {
         if (includeProfilePic) {
             const profilePic64 = await this.retrieveProfilePic(user)
             return {id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance, img: profilePic64}
@@ -131,9 +131,6 @@ class AuthService {
             return {id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance}
 
         }
-    }
-
+    },
 }
 
-
-module.exports = AuthService; 
