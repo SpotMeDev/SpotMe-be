@@ -9,9 +9,8 @@ const port = process.env.PORT || 8080;
 const authRouter = require('./Controllers/AuthController'); 
 const transactionRouter = require('./Controllers/TransactionController')
 const passport = require('passport');
+const TokenService = require('./Services/TokenService'); 
 const mongoose = require('mongoose'); 
-const initializePassport = require('./passport-config'); 
-initializePassport(passport); 
 
 // Connect Database 
 mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@spotme.lidfh.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`, {useNewUrlParser: true}); 
@@ -21,14 +20,8 @@ mongoose.set('useFindAndModify', false);
 app.use(bodyParser.json({limit: '50mb'}))
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true })); 
 
-// // Express session middleware
-// app.use(session({
-//     secret: process.env.SESSION_SECRET, 
-//     resave: true, 
-//     saveUninitialized: false
-// }))
-
 // Passport middleware
+TokenService.initialize(passport); 
 app.use(passport.initialize())
 app.use(passport.session())
 

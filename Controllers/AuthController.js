@@ -3,10 +3,10 @@ const router = express.Router();
 const User = require('../models/user'); 
 const bcrypt = require('bcrypt'); 
 const passport = require('passport');
-const utils = require('../utils.js'); 
 const Friends = require('../models/friends');
 const authService = require("../Services/AuthService"); 
 const AuthService = new authService()
+const TokenService = require('../Services/TokenService'); 
 
 router.post("/signup", async (req, res) => {
     try {
@@ -26,7 +26,7 @@ router.post("/signup", async (req, res) => {
         // hash password and insert into database
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
         const newUser = await User.create({name: req.body.name, username: req.body.username, email: req.body.email, password: hashedPassword, balance: 0})
-        const jwt = utils.issueJWT(newUser);
+        const jwt = TokenService.issueJWT(newUser); 
         const retUser = await AuthService.returnUserDetails(newUser, true); 
         return res.status(200).send({message: "Successfully signed up the user!", token: jwt.token, expiresIn: jwt.expires, user: retUser})
     }
@@ -49,7 +49,7 @@ router.post('/login', (req, res) => {
                     return res.status(401).send({message: "Unable to log in"})
                 }
                 if (isMatch) {
-                    const jwt = utils.issueJWT(user); 
+                    const jwt = TokenService.issueJWT(user); 
                     // grab user profile picture 
                     const profilePic64 = await AuthService.retrieveProfilePic(user); 
                     const retUser = await AuthService.returnUserDetails(user, true); 

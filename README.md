@@ -4,21 +4,22 @@ Node JS / Express Server for the SpotMe application which looks to provide an ea
 
 ## Project Structure 
 ```
-├── docs                                # All non code related documents
 ├── Controllers                         # Controllers will be the intermediary between Services and Client requests, handles all routing
 │   └── AuthController.js               # All Authentication Routes contained within this Controller
     └── TransactionController.js        # All Transaction Routes contained within this Controller
+└── models                              # Contains all Mongoose Database Schemas for our different collections
+    ├── friends.js                      # Friend Schema that establishes relationship between requester and recipient
+    └── image.js                        # Image Schema that establishes stores profile / transaction image
+    ├── transaction.js                  # Transaction Schema that records transaction details 
+    └── user.js                         # User Schema that saves user and necessary information
+├── scripts                             # Contains any JS scripts that we might need to run from time to time
 └── Services                            # Services will serve similar to a DAO, such that they will provide all of our database operations
     ├── AuthService.js                  # Class containing helper functions / database queries dealing with our application's users 
     └── Base64.js                       # Class containing code that deals with Base64 formatting, this is specifically for our image storage 
     ├── TransactionService.js           # Class containing helper functions / database queries dealing with our application's transactions 
     └── utils.js                        # File will contain miscellaneous functions needed throughout our application, such as conversion functions 
 ├── index.js                            # Main source file that app will use to render our routes and instantiate all necessary middleware
-└── models                              # Contains all Mongoose Database Schemas for our different collections
-    ├── friends.js                      # Friend Schema that establishes relationship between requester and recipient
-    └── image.js                        # Image Schema that establishes stores profile / transaction image
-    ├── transaction.js                  # Transaction Schema that records transaction details 
-    └── user.js                         # User Schema that saves user and necessary information
+
 ```
 
 ## Installation / Running Server 
