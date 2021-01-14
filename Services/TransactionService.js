@@ -4,6 +4,47 @@ const AuthService = require('../Services/AuthService');
 const utils = require('../Services/utils'); 
 const dateConversion = utils.dateConversion; 
 
+
+let createTransaction = async (user, recipientID, message, amount) => {
+    try {
+        // check that the user has enough in their current balance to make that transaction
+        const sender = user; 
+        if (sender.balance >= amount) {
+            // also check for a user message 
+            if (message === "") {
+                throw new Error("Must include message with your transaction"); 
+            }
+            // decrement the user's balance 
+            const updatedSender = await User.findOneAndUpdate({_id: sender._id}, {$inc: {balance: -amount}}, {new: true});
+            const updatedRecipient = await User.findOneAndUpdate({_id: recipientID}, {$inc: {balance: amount}}, {new: true}); 
+            
+            const retUser = await AuthService.returnUserDetails(updatedSender, true); 
+            // create the transaction
+            const transaction = await Transaction.create({sender: updatedSender._id, recipient: updatedRecipient._id, amount: amount, message: message}); 
+            return res.status(200).send({messsage: "Succesfully completed transaction", amount: amount, user: retUser});    
+        }
+        else {
+            throw new Error("Insufficient balance to complete request"); 
+        }
+    }
+    catch (err) {
+        throw err; 
+    }
+}
+
+
+let addBalance = async (user, amount) => {
+    try {
+        const updateUserBalance = await User.findOneAndUpdate({_id: user._id}, {$inc: {balance: amount}}, {new: true});
+        const retUser = await AuthService.returnUserDetails(updateUserBalance, true); 
+        return retUser; 
+    }
+    catch (err) {
+        throw err; 
+    }
+}
+
+
 // finds all transactions where user is either the sender or the recipient 
 let allUserTransactions = async (user) => {
     // createdAt: -1 will provide transactions in descending order
@@ -71,6 +112,8 @@ let allFriendsTransactions = async (user) => {
 
 
 module.exports = {
+    createTransaction: createTransaction, 
+    addBalance: addBalance, 
     allFriendsTransactions: allFriendsTransactions, 
     allUserTransactions: allUserTransactions
 } 
