@@ -53,13 +53,13 @@ router.post("/change-account", passport.authenticate('jwt', {session: false}), a
 router.post('/change-password', passport.authenticate('jwt', {session: false}), async(req, res) => {
     try {
         const user = req.user; 
-        if (req.body.currentPasword == "" || req.body.newPassword == "" || req.body.confirmPassword == "") {
+        if (req.body.currentPasword === "" || req.body.newPassword === "" || req.body.confirmPassword === "") {
             return res.status(400).send({message: "Passwords can't be empty"}); 
         }
-        if (req.body.newPassword != req.body.confirmPassword) {
+        if (req.body.newPassword !== req.body.confirmPassword) {
             return res.status(400).send({message: "New Password and Confirm Password must match" }); 
         }
-        if (req.body.currentPasword == req.body.newPassword) {
+        if (req.body.currentPasword === req.body.newPassword) {
             return res.status(400).send({message: "New password must be different from the current password!" }); 
         }
         

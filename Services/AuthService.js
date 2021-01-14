@@ -65,8 +65,8 @@ let changeAccount = async (user, updateType, updatedField) => {
     try {
         const type = updateType;  
         const newField = updatedField; 
-        if (type == "name") {
-            if (user.name == newField || newField == "") {
+        if (type === "name") {
+            if (user.name === newField || newField === "") {
                 throw new Error("Please select a new name that is at least 1 character long!"); 
             }
             const updatedUser = await User.findOneAndUpdate({_id: user._id}, {$set: {name: newField} },{new: true}); 
@@ -74,9 +74,9 @@ let changeAccount = async (user, updateType, updatedField) => {
             return retUser; 
             
         }
-        else if (type == "username") {
+        else if (type === "username") {
             // handle username change here
-            if (user.username == newField || newField == "") {
+            if (user.username === newField || newField === "") {
                 throw new Error("Please select a new username that is at least 1 character long!"); 
             }
             const updatedUser = await User.findOneAndUpdate({_id: user._id}, {$set: {username: newField} },{new: true});

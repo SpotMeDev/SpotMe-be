@@ -47,7 +47,7 @@ let allFriends = async (id) => {
                 await Promise.all(friends.map(async (friend) => {
                     // for each friend id, query for that document and the user will be the requestor so we want to map the recipient and return them
                     let friendDoc = await Friends.findById(friend); 
-                    if (friendDoc.status == 3) {
+                    if (friendDoc.status === 3) {
                         // using the id of the recipient, we will find the 
                         let recipient = await User.findById(friendDoc.recipient);
                         ret.push({id: recipient._id, friends: recipient.friends, name: recipient.name, username: recipient.username, email: recipient.email})
