@@ -35,7 +35,7 @@ let allUserTransactions = async (user) => {
     }
     catch(err) {
         console.log(err); 
-        return []
+        throw err; 
     }
 } 
 
@@ -65,7 +65,7 @@ let allFriendsTransactions = async (user) => {
     }
     catch(err) {
         console.log(err); 
-        return []
+        throw err; 
     }
 }
 
