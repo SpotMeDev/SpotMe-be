@@ -94,17 +94,22 @@ let changeAccount = async (user, updateType, updatedField) => {
 }
 
 let searchUsers = async (query) => {
-    // find all users with a username that matches the query
-    const allUsers = await User.find({username: { $regex: query, $options: "i" }}); 
-    // now iterate through the array of users, removing any sensitive information, and also removing the user 
-    let ret = []
-    if (allUsers.length > 0) {
-        await Promise.all(allUsers.map(async (user) => { 
-            const retUser = await returnUserDetails(user); 
-            ret.push(retUser); 
-        }))
+    try {
+        // find all users with a username that matches the query
+        const allUsers = await User.find({username: { $regex: query, $options: "i" }}); 
+        // now iterate through the array of users, removing any sensitive information, and also removing the user 
+        let ret = []
+        if (allUsers.length > 0) {
+            await Promise.all(allUsers.map(async (user) => { 
+                const retUser = await returnUserDetails(user); 
+                ret.push(retUser); 
+            }))
+        }
+        return ret; 
     }
-    return ret; 
+    catch(err) {
+        throw err; 
+    }
 }
 
 // check if user exists with given email
