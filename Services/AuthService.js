@@ -1,10 +1,17 @@
 const User = require('../models/user'); 
-const Friends = require('../models/friends'); 
 const Image = require('../models/image'); 
 const Utils = require('../services/utils')
 const bcrypt = require('bcrypt'); 
 const TokenService = require('./TokenService'); 
 
+/**
+ * Takes in necessary profile information and creates a user object in our database.
+ * @param   {string} name 
+ * @param   {string} username 
+ * @param   {string} email 
+ * @param   {string} password 
+ * @returns {object} the encrypted JWT (JSON Web Token) along with the database's user object
+ */
 let signupUser = async (name, username, email, password) => {
     try {
         // hash password and insert into database
@@ -18,6 +25,13 @@ let signupUser = async (name, username, email, password) => {
         throw err; 
     }
 }
+
+/**
+ * Takes in an email (soon username) and password and logs in user by checking password hash and generating a token 
+ * @param   {string} email 
+ * @param   {string} password the second number
+ * @returns {object} the encrypted JWT (JSON Web Token) along with the database's user object
+ */
 
 let loginUser = async (email, password) => {
     try {
@@ -42,6 +56,14 @@ let loginUser = async (email, password) => {
     }
 }
 
+/**
+ * Changes the user's password by updating the database document 
+ * @param   {object} user Current user object that needs password change 
+ * @param   {string} currentPassword the password that is currently associated with the user 
+ * @param   {string} newPassword the password string that the user wants to change to 
+ * @returns {boolean} boolean indicating whether we have succesffuly changed password
+ */
+
 let changePassword = async (user, currentPassword, newPassword) => {
     try {
         let isMatch = await bcrypt.compare(currentPassword, user.password); 
@@ -60,7 +82,13 @@ let changePassword = async (user, currentPassword, newPassword) => {
     }
 }
 
-
+/**
+ * Change user account information, either the user's name or username 
+ * @param   {object} user Current user object that needs password change 
+ * @param   {string} updateType string that indicates whether we are changing user's name or username
+ * @param   {string} updatedField the string that is associated with the new value that we want to change our field to 
+ * @returns {object} returns updated user object
+ */
 let changeAccount = async (user, updateType, updatedField) => {
     try {
         const type = updateType;  
@@ -93,6 +121,12 @@ let changeAccount = async (user, updateType, updatedField) => {
     }
 }
 
+/**
+ * Given a search query, return all corresponding users 
+ * @param   {string} query string representing search query of potential usernames 
+ * @returns {array} returns an array of user objects that match the query
+ */
+
 let searchUsers = async (query) => {
     try {
         // find all users with a username that matches the query
@@ -112,7 +146,11 @@ let searchUsers = async (query) => {
     }
 }
 
-// check if user exists with given email
+/**
+ * Checks if a user exists with the given email
+ * @param   {string} email 
+ * @returns {boolean} boolean indicating whether there is a user that already exists with that email 
+ */
 let userWithEmail = async (email) => {
     try {
         // check that email is not already used 
@@ -128,7 +166,12 @@ let userWithEmail = async (email) => {
         throw err; 
     }
 } 
-    // check if user already exists with given username
+
+/**
+ * Checks if a user exists with the given username
+ * @param   {string} username 
+ * @returns {boolean} boolean indicating whether there is a user that already exists with that username 
+ */
 let userWithUsername = async (username) => {
     try {
         const user = await User.findOne({username: username}); 
@@ -144,70 +187,12 @@ let userWithUsername = async (username) => {
     }
 }
 
-// function will take in the sender and recipID and then return the status of their friendship: 
-// 0 --> not friends 
-// 1 ---> user has requested 
-// 2 ---> pending friend request from recipient
-// 3 -> friends already 
-let friendStatus = async (senderId, recipientId) => {
-    // check the friends array to see if the sender is already friends with 
-    try {
-        const sender = await User.findById(senderId); 
-        const recipient = await User.findById(recipientId); 
-
-        if (sender && recipient) {
-            // now check the status of their friendship in the friends collection
-            const senderFriend = await Friends.findOne({requester: sender._id, recipient: recipient._id}); 
-            if (senderFriend) {
-                // then return the status of the sender's friendship with the recipient 
-                // will be either 1, 2, or 3
-                return senderFriend.status; 
-            }
-            return 0; 
-
-        }
-        else {
-            return 0; 
-        }   
-    }
-    catch(err) {
-        throw err; 
-    }
-}
-
-// function takes the user ID and returns all of the user's friends, in an array of objects 
-let allFriends = async (id) => {
-    try {
-        const user = await User.findById(id); 
-        if (user) {
-            // create a mongo aggregation: NEED TO IMPROVE: TOO MANY QUERIES 
-            const friends = user.friends
-            if (friends.length > 0) {
-                let ret = []
-                // iterate through the friends of the user  
-                await Promise.all(friends.map(async (friend) => {
-                    // for each friend id, query for that document and the user will be the requestor so we want to map the recipient and return them
-                    let friendDoc = await Friends.findById(friend); 
-                    if (friendDoc.status == 3) {
-                        // using the id of the recipient, we will find the 
-                        let recipient = await User.findById(friendDoc.recipient);
-                        ret.push({id: recipient._id, friends: recipient.friends, name: recipient.name, username: recipient.username, email: recipient.email})
-                    }
-                }))
-                return ret; 
-            }
-            else {
-                return []
-            }
-    
-        }   
-        return [];
-    }
-    catch (err) {
-        throw err; 
-    } 
-
-}
+/**
+ * Update the profile picture of the corresponding user
+ * @param   {object} user  
+ * @param   {string} data Base64 encoding of the user's profile picture  
+ * @returns {boolean} boolean indicating whether we succesfully update the profile picture 
+ */
 
 let updateProfilePic = async (user, data) => {
     try {
@@ -221,6 +206,11 @@ let updateProfilePic = async (user, data) => {
     }
 } 
 
+/**
+ * Given a user, return the base64 encoding of their profile picture 
+ * @param   {object} user  
+ * @returns {string} returns Base64 encoding of the user's profile picture  
+ */
 let retrieveProfilePic = async (user) => {
     try {
         const imgID = user.profileImg; 
@@ -238,7 +228,12 @@ let retrieveProfilePic = async (user) => {
         throw err; 
     }
 }
-// given a user, function returns user object details excluding password 
+/**
+ * Given a user, function returns user object details excluding password 
+ * @param   {object} user  
+ * @param   {boolean} includeProfilePic   
+ * @returns {string} returns Base64 encoding of the user's profile picture  
+ */
 let returnUserDetails = async (user, includeProfilePic = false) => {
     try {
         if (includeProfilePic) {
@@ -263,8 +258,6 @@ module.exports = {
     searchUsers: searchUsers,  
     userWithEmail: userWithEmail, 
     userWithUsername: userWithUsername, 
-    friendStatus: friendStatus, 
-    allFriends: allFriends, 
     updateProfilePic: updateProfilePic, 
     retrieveProfilePic: retrieveProfilePic, 
     returnUserDetails: returnUserDetails
