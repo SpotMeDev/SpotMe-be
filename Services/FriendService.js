@@ -2,11 +2,17 @@ const User = require('../models/user');
 const Friends = require('../models/friends'); 
 const AuthService = require('../Services/AuthService')
 
-// function will take in the sender and recipID and then return the status of their friendship: 
-// 0 --> not friends 
-// 1 ---> user has requested 
-// 2 ---> pending friend request from recipient
-// 3 -> friends already 
+/**
+ * Take in the senderId and recipientId and then return the status of their friendship:
+ * 0 --> not friends 
+ * 1 --> user has requested 
+ * 2 --> pending friend request from recipient
+ * 3 --> friends already 
+ * @param   {string} senderId 
+ * @param   {string} recipientId 
+ * @returns {number} returns number (0-3, refer to comments above about what each corresponds to) which indicates the status of friendship
+ */
+
 let friendStatus = async (senderId, recipientId) => {
     // check the friends array to see if the sender is already friends with 
     try {
@@ -33,8 +39,11 @@ let friendStatus = async (senderId, recipientId) => {
     }
 }
 
-
-// function takes the user ID and returns all of the user's friends, in an array of objects 
+/**
+ * takes the user ID and returns all of the user's friends, in an array of objects 
+ * @param   {string} id 
+ * @returns {array} returns an array of User objects corresponding to all the friends of the original user, if none, returns []
+ */
 let allFriends = async (id) => {
     try {
         const user = await User.findById(id); 
@@ -68,7 +77,12 @@ let allFriends = async (id) => {
 
 }
 
-
+/**
+ * Takes in a user and a recipientID, and sends a friend request to the recipient
+ * @param   {object} user 
+ * @param   {object} recipientID
+ * @returns {object} returns updated user object if succesfully added, else throw an error
+ */
 let addFriend = async (user, recipientID) => {
     try {
         // get the sender and recipient user obj
@@ -90,7 +104,13 @@ let addFriend = async (user, recipientID) => {
     }
 }
 
-
+/**
+ * Function either accepts or declines a pending friend request
+ * @param   {object} user 
+ * @param   {object} recipientID
+ * @param   {string} acceptedRequest string which is either "true" or "false" indicating whether the user accepts or declines this request
+ * @returns {object} returns updated user object if succesfully handled, else throw an error
+ */
 let handleFriendRequest = async (user, recipientID, acceptedRequest) => {
     try {
         const sender = user; 

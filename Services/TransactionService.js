@@ -4,7 +4,14 @@ const AuthService = require('../Services/AuthService');
 const utils = require('../Services/utils'); 
 const dateConversion = utils.dateConversion; 
 
-
+/**
+ * Creates a transaction between user and recipient along with updating their SpotMe balance
+ * @param   {object} user 
+ * @param   {string} recipientID 
+ * @param   {string} message string that corresponds to the message that describes the transaction 
+ * @param   {number} amount the amount of the transaction between the two users 
+ * @returns {object} the updated user object
+ */
 let createTransaction = async (user, recipientID, message, amount) => {
     try {
         // check that the user has enough in their current balance to make that transaction
@@ -21,7 +28,7 @@ let createTransaction = async (user, recipientID, message, amount) => {
             const retUser = await AuthService.returnUserDetails(updatedSender, true); 
             // create the transaction
             const transaction = await Transaction.create({sender: updatedSender._id, recipient: updatedRecipient._id, amount: amount, message: message}); 
-            return res.status(200).send({messsage: "Succesfully completed transaction", amount: amount, user: retUser});    
+            return retUser;   
         }
         else {
             throw new Error("Insufficient balance to complete request"); 
@@ -32,7 +39,14 @@ let createTransaction = async (user, recipientID, message, amount) => {
     }
 }
 
-
+/**
+ * Increases the user's SpotMe balance by the specified amount
+ * @param   {object} user 
+ * @param   {string} recipientID 
+ * @param   {string} message string that corresponds to the message that describes the transaction 
+ * @param   {number} amount the amount of the transaction between the two users 
+ * @returns {object} the updated user object
+ */
 let addBalance = async (user, amount) => {
     try {
         const updateUserBalance = await User.findOneAndUpdate({_id: user._id}, {$inc: {balance: amount}}, {new: true});
@@ -45,7 +59,11 @@ let addBalance = async (user, amount) => {
 }
 
 
-// finds all transactions where user is either the sender or the recipient 
+/**
+ * Finds all transactions where user is either the sender or the recipient
+ * @param   {object} user 
+ * @returns {array} returns an array of transactions, if none, returns []
+ */ 
 let allUserTransactions = async (user) => {
     // createdAt: -1 will provide transactions in descending order
     try {
@@ -79,7 +97,11 @@ let allUserTransactions = async (user) => {
         throw err; 
     }
 } 
-
+/**
+ * Finds all transactions associated with the user or any of the user's friends 
+ * @param   {object} user 
+ * @returns {array} returns an array of transactions, if none, returns []
+ */ 
 let allFriendsTransactions = async (user) => {
     // create a set of transactions so that we don't add any duplicates 
     try {

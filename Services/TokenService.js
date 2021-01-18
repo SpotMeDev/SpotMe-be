@@ -9,9 +9,12 @@ const PUB_KEY = fs.readFileSync(pathToPublicKey, 'utf8');
 const User = require('../models/user'); 
 const JwtStrategy = require('passport-jwt').Strategy; 
 const ExtractJwt = require('passport-jwt').ExtractJwt; 
-    /**
-         * @param {*} user - The user object.  We need this to set the JWT `sub` payload property to the MongoDB user ID
-    */
+
+/**
+ * Creates a encrypted JWT based on the MongoDB user
+ * @param {*} user - The user object.  We need this to set the JWT `sub` payload property to the MongoDB user ID 
+ * @returns {object} returns an object containing the signed token along with the expiration
+ */
 let issueJWT = (user) => {
     const _id = user._id;
 
@@ -30,7 +33,10 @@ let issueJWT = (user) => {
     }
 }
 
-
+/**
+ * Initialize function which creates JWT strat to help extract and validate the user based on the JWT payload
+ * @param {*} passport
+ */
 let initialize = (passport) => {
     const options = {
         jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), 

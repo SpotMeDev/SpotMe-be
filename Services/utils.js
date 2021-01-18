@@ -1,5 +1,9 @@
 const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-
+/**
+ * Converts a JavaScript date object into the string format yyyy-mm-dd
+ * @param {Date} date JS Date object to be converted
+ * @returns {string} string format of date (yyyy-mm-dd)
+ */
 let dateConversion = (date) => {
   year = date.getFullYear();
   month = date.getMonth()+1;
@@ -15,6 +19,11 @@ let dateConversion = (date) => {
   return year+'-' + month + '-'+dt;
 }
 
+/**
+ * Encodes a string into base64
+ * @param {string} input
+ * @returns {string} base64 encoded string
+ */
 let btoa = (input ='')  => {
   let str = input;
   let output = '';
@@ -34,7 +43,11 @@ let btoa = (input ='')  => {
   
   return output;
 }
-
+/**
+ * Decodes a string from base64
+ * @param {string} input base64 encoded string
+ * @returns {string} decoded string
+ */
 let atob = (input = '') => {
   let str = input.replace(/=+$/, '');
   let output = '';
@@ -53,7 +66,11 @@ let atob = (input = '') => {
 
   return output;
 } 
-
+/**
+ * Takes an array of buffers and converts to a base64 string
+ * @param {array} buffer 
+ * @returns {string} base64 string
+ */
 let arrayBufferToBase64 = (buffer) => {
   var binary = '';
   var bytes = [].slice.call(new Uint8Array(buffer));
