@@ -4,6 +4,8 @@ const passport = require('passport');
 const AuthService = require("../Services/AuthService"); 
 const FriendService = require('../Services/FriendService');
 
+//TODO abstract into smaller functions
+
 router.post("/signup", async (req, res) => {
     try {
         if (req.body.password !== req.body.confirmPassword || (req.body.password === "" || req.body.confirmPassword === "")) {
