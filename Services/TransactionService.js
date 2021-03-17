@@ -1,6 +1,7 @@
 const Transaction = require('../models/transaction')
 const User = require('../models/user'); 
 const AuthService = require('../Services/AuthService'); 
+const FriendService = require('../Services/FriendService');
 const utils = require('../Services/utils'); 
 const dateConversion = utils.dateConversion; 
 
@@ -106,7 +107,7 @@ let allFriendsTransactions = async (user) => {
     // create a set of transactions so that we don't add any duplicates 
     try {
         let set = new Set(); 
-        let friends = await AuthService.allFriends(user._id); 
+        let friends = await FriendService.allFriends(user._id); 
         let userTransactions = await allUserTransactions(user)
         let ret = userTransactions; 
         // add all of our transactions to set
