@@ -1,7 +1,7 @@
 const chai = require('chai'); 
 const expect = chai.expect;
 const request = require("request");
-const AuthService = require('../../../Services/AuthService');
+const AuthService = require('../../Services/AuthService');
 const mongoose = require('mongoose'); 
 
 
