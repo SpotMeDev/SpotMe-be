@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 
 
 describe("Authentication Service Tests", () => {
+    // before function runs before each test and should be used to set up database connections and async requests
     before((done) => {
         mongoose.connect('mongodb://localhost:27017/spotme-test', {useNewUrlParser: true}); 
         done()
@@ -33,6 +34,11 @@ describe("Authentication Service Tests", () => {
             expect(user.username).equals(username);
             expect(user.email).equals(email)
             expect(user.balance).equals(0)
+        })
+    })
+    after((done) => {
+        mongoose.connection.db.dropDatabase(() => {
+            mongoose.connection.close(done);
         })
     })
 })
