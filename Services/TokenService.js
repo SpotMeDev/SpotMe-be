@@ -9,6 +9,12 @@ const PUB_KEY = fs.readFileSync(pathToPublicKey, 'utf8');
 const User = require('../models/user'); 
 const JwtStrategy = require('passport-jwt').Strategy; 
 const ExtractJwt = require('passport-jwt').ExtractJwt; 
+//testing new okta token verification
+const OktaJwtVerifier = require('@okta/jwt-verifier');
+const oktaJwtVerifier = new OktaJwtVerifier({
+    issuer: 'https://dev-96772784.okta.com/oauth2/default'
+});
+console.log(`From token service: ${oktaJwtVerifier}`)
 
 /**
  * Creates a encrypted JWT based on the MongoDB user
