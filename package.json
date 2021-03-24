@@ -4,7 +4,7 @@
   "description": "Backend for SpotMe application",
   "main": "index.js",
   "scripts": {
-    "test": "mocha 'Tests/**/*js' --recursive --reporter spec",
+    "test": "export NODE_ENV=test && nodemon --exec 'mocha 'Tests/**/*js' --recursive --timeout 1000000 --reporter spec'",
     "devStart": "nodemon index.js"
   },
   "repository": {
