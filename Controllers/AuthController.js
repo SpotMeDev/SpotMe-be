@@ -30,7 +30,7 @@ router.post("/signup", async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         let {jwt, retUser} = await AuthService.loginUser(req.body.email, req.body.password); 
-        return res.status(200).send({message: "Successfully signed up the user!", token: jwt.token, expiresIn: jwt.expires, user: retUser})
+        return res.status(200).send({message: "Successfully logged in the user!", token: jwt.token, expiresIn: jwt.expires, user: retUser})
     }
     catch(err) {
         return res.status(400).send({message: err.message})
