@@ -30,7 +30,7 @@ router.post("/signup", async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         let {jwt, retUser} = await AuthService.loginUser(req.body.email, req.body.password); 
-        return res.status(200).send({message: "Successfully signed up the user!", token: jwt.token, expiresIn: jwt.expires, user: retUser})
+        return res.status(200).send({message: "Successfully logged in the user!", token: jwt.token, expiresIn: jwt.expires, user: retUser})
     }
     catch(err) {
         return res.status(400).send({message: err.message})
@@ -53,17 +53,17 @@ router.post("/change-account", passport.authenticate('jwt', {session: false}), a
 router.post('/change-password', passport.authenticate('jwt', {session: false}), async(req, res) => {
     try {
         const user = req.user; 
-        if (req.body.currentPasword === "" || req.body.newPassword === "" || req.body.confirmPassword === "") {
+        if (req.body.currentPassword === "" || req.body.newPassword === "" || req.body.confirmPassword === "") {
             return res.status(400).send({message: "Passwords can't be empty"}); 
         }
         if (req.body.newPassword !== req.body.confirmPassword) {
             return res.status(400).send({message: "New Password and Confirm Password must match" }); 
         }
-        if (req.body.currentPasword === req.body.newPassword) {
+        if (req.body.currentPassword === req.body.newPassword) {
             return res.status(400).send({message: "New password must be different from the current password!" }); 
         }
         
-        let changedPassword = await AuthService.changePassword(user, req.body.currentPasword, req.body.newPassword); 
+        let changedPassword = await AuthService.changePassword(user, req.body.currentPassword, req.body.newPassword); 
         if (changedPassword) {
             return res.status(200).send({message: "Successfully changed password"})
         }
@@ -104,7 +104,8 @@ router.post('/update-profile-pic', passport.authenticate('jwt', {session: false}
 router.get("/profile-pic", passport.authenticate('jwt', {session: false}), async (req, res) => {
     const user = req.user; 
     try  {
-        return await AuthService.retrieveProfilePic(user); 
+        const profilePic = await AuthService.retrieveProfilePic(user);
+        return res.status(200).send({message: "Retrieved profile pic", profilePic: profilePic })
     } catch (err) {
         return res.status(400).send({message: err.message})
     }
@@ -140,7 +141,7 @@ router.get('/all-friends', async (req, res) => {
         return res.status(200).send({message: "Successfully found all the friends of the user", friends: friends})
     }
     catch(err) {
-        return res.status(400).send({messsage: err.message})
+        return res.status(400).send({message: err.message})
     }
 })
 
