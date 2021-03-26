@@ -141,7 +141,7 @@ router.get('/all-friends', async (req, res) => {
         return res.status(200).send({message: "Successfully found all the friends of the user", friends: friends})
     }
     catch(err) {
-        return res.status(400).send({messsage: err.message})
+        return res.status(400).send({message: err.message})
     }
 })
 
