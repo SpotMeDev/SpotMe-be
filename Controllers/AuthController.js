@@ -53,17 +53,17 @@ router.post("/change-account", passport.authenticate('jwt', {session: false}), a
 router.post('/change-password', passport.authenticate('jwt', {session: false}), async(req, res) => {
     try {
         const user = req.user; 
-        if (req.body.currentPasword === "" || req.body.newPassword === "" || req.body.confirmPassword === "") {
+        if (req.body.currentPassword === "" || req.body.newPassword === "" || req.body.confirmPassword === "") {
             return res.status(400).send({message: "Passwords can't be empty"}); 
         }
         if (req.body.newPassword !== req.body.confirmPassword) {
             return res.status(400).send({message: "New Password and Confirm Password must match" }); 
         }
-        if (req.body.currentPasword === req.body.newPassword) {
+        if (req.body.currentPassword === req.body.newPassword) {
             return res.status(400).send({message: "New password must be different from the current password!" }); 
         }
         
-        let changedPassword = await AuthService.changePassword(user, req.body.currentPasword, req.body.newPassword); 
+        let changedPassword = await AuthService.changePassword(user, req.body.currentPassword, req.body.newPassword); 
         if (changedPassword) {
             return res.status(200).send({message: "Successfully changed password"})
         }
@@ -104,7 +104,8 @@ router.post('/update-profile-pic', passport.authenticate('jwt', {session: false}
 router.get("/profile-pic", passport.authenticate('jwt', {session: false}), async (req, res) => {
     const user = req.user; 
     try  {
-        return await AuthService.retrieveProfilePic(user); 
+        const profilePic = await AuthService.retrieveProfilePic(user);
+        return res.status(200).send({message: "Retrieved profile pic", profilePic: profilePic })
     } catch (err) {
         return res.status(400).send({message: err.message})
     }
