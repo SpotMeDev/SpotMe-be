@@ -63,10 +63,11 @@ describe("Auth Controllers Tests", () => {
             expect(res.body.message).to.equal("Username is already in use. Please select another username or sign in");
         });
         it("Error thrown", async () => {
-            sinon.stub(AuthService, 'userWithEmail').throws({message: "Failed to signup"});
+            const errorMessage = "Failed to signup";
+            sinon.stub(AuthService, 'userWithEmail').throws({ message: errorMessage });
             const res = await chai.request(app).post("/auth/signup").send({name: name, username: username, email: email, password: password, confirmPassword: password});
             expect(res.status).to.equal(400);
-            expect(res.body.message).to.equal("Failed to signup");
+            expect(res.body.message).to.equal(errorMessage);
         });
     });
     describe("Login Route Tests", () => {
@@ -86,27 +87,31 @@ describe("Auth Controllers Tests", () => {
             expect(res.body.token).to.eql(jwt.token);
         });
         it("Error thrown", async () => {
-            sinon.stub(AuthService, 'loginUser').throws({message: "Failed to login"});
+            const errorMessage = "Failed to login";
+            sinon.stub(AuthService, 'loginUser').throws({ message: errorMessage });
             const res = await chai.request(app).post("/auth/login").send({email: email, password: password});
             expect(res.status).to.equal(400);
-            expect(res.body.message).to.equal("Failed to login");
+            expect(res.body.message).to.equal(errorMessage);
         });
     });
 
     describe("Change Account Tests", () => {
+        const updateType = "username";
+        const updatedField = "newUsername";
         it("Successfully changed account information", async () => {
             const retUser = {id: "", name: "",  username: "", email: "", balance: 0, img: ""};
             sinon.stub(AuthService, 'changeAccount').returns(retUser);
-            const res = await chai.request(app).post("/auth/change-account");
+            const res = await chai.request(app).post("/auth/change-account").send({updateType: updateType, updatedField: updatedField });
             expect(res.status).to.equal(200);
             expect(res.body.message).to.equal("Succesfully updated the user!");
             expect(res.body.user).to.eql(retUser);
         });
         it("Error thrown", async () => {
-            sinon.stub(AuthService, 'changeAccount').throws({message: "Failed to change account information"});
-            const res = await chai.request(app).post("/auth/change-account");
+            const errorMessage = "Failed to change account information";
+            sinon.stub(AuthService, 'changeAccount').throws({message: errorMessage});
+            const res = await chai.request(app).post("/auth/change-account").send({updateType: updateType, updatedField: updatedField});
             expect(res.status).to.equal(400);
-            expect(res.body.message).to.equal("Failed to change account information");
+            expect(res.body.message).to.equal(errorMessage);
         });
     });
     describe("Change Password Tests", () => {
@@ -140,10 +145,11 @@ describe("Auth Controllers Tests", () => {
             expect(res.body.message).to.equal("Couldn't change password");
         });
         it("Error thrown", async () => {
-            sinon.stub(AuthService, 'changePassword').throws({message: "Failed to change password"});
+            const errorMessage = "Failed to change password";
+            sinon.stub(AuthService, 'changePassword').throws({message: errorMessage });
             const res = await chai.request(app).post("/auth/change-password").send({currentPassword: password, newPassword: newPassword, confirmPassword: newPassword});
             expect(res.status).to.equal(400);
-            expect(res.body.message).to.equal("Failed to change password");
+            expect(res.body.message).to.equal(errorMessage);
         });
     });
     describe("Update Profile Picture Route", () => {
@@ -169,10 +175,11 @@ describe("Auth Controllers Tests", () => {
             expect(res.body.message).to.equal("Unable to update profile picture at this time");
         });
         it("Error thrown", async () => {
-            sinon.stub(AuthService, 'updateProfilePic').throws({message: "Failed to update profile picture"});
+            const errorMessage = "Failed to update profile picture";
+            sinon.stub(AuthService, 'updateProfilePic').throws({message: errorMessage });
             const res = await chai.request(app).post("/auth/update-profile-pic").send({profileData64: profileData64 });
             expect(res.status).to.equal(400);
-            expect(res.body.message).to.equal("Failed to update profile picture");
+            expect(res.body.message).to.equal(errorMessage);
         });
     });
     describe("Retrieve Profile Pic Route", () => {
@@ -184,90 +191,103 @@ describe("Auth Controllers Tests", () => {
             expect(res.body.profilePic).to.equal("profilePic");
         });
         it("Error thrown", async () => {
-            sinon.stub(AuthService, 'retrieveProfilePic').throws({message: "Failed to retrieve profile picture"});
+            const errorMessage = "Failed to retrieve profile picture";
+            sinon.stub(AuthService, 'retrieveProfilePic').throws({message: errorMessage });
             const res = await chai.request(app).get("/auth/profile-pic");
             expect(res.status).to.equal(400);
-            expect(res.body.message).to.equal("Failed to retrieve profile picture");
+            expect(res.body.message).to.equal(errorMessage);
         });
     });
     describe("Search Query", () => {
+        const query = "user1";
         it("Successful query", async () => {
             sinon.stub(AuthService, 'searchUsers').returns([]);
-            const res = await chai.request(app).get("/auth/search-query");
+            const res = await chai.request(app).get("/auth/search-query").query({query: query});
             expect(res.status).to.equal(200);
             expect(res.body.message).to.equal("Successfully retrieved all users with the query");
             expect(res.body.users).to.eql([]);
         });
         it("Error thrown", async () => {
-            sinon.stub(AuthService, 'searchUsers').throws({message: "Failed to retrieve all users with the query"});
-            const res = await chai.request(app).get("/auth/search-query");
+            const errorMessage = "Failed to retrieve all users with the query";
+            sinon.stub(AuthService, 'searchUsers').throws({message: errorMessage});
+            const res = await chai.request(app).get("/auth/search-query").query({query: query});
             expect(res.status).to.equal(400);
-            expect(res.body.message).to.equal("Failed to retrieve all users with the query");
+            expect(res.body.message).to.equal(errorMessage);
         });
     });
     describe("Is Friend", () => {
+        const friendID = "1234";
         it("Successfully determined friend status", async () => {
             sinon.stub(FriendService, 'friendStatus').returns(1);
-            const res = await chai.request(app).get("/auth/is-friend");
+            const res = await chai.request(app).get("/auth/is-friend").query({rID: friendID});
             expect(res.status).to.equal(200);
             expect(res.body.message).to.equal("Sucessfully determined friend status");
             expect(res.body.status).to.equal(1);
         });
         it("Error thrown", async () => {
-            sinon.stub(FriendService, 'friendStatus').throws({message: "Failed to determine friend status"});
-            const res = await chai.request(app).get("/auth/is-friend");
+            const errorMessage = "Failed to determine friend status";
+            sinon.stub(FriendService, 'friendStatus').throws({message: errorMessage});
+            const res = await chai.request(app).get("/auth/is-friend").query({rID: friendID});
             expect(res.status).to.equal(400);
-            expect(res.body.message).to.equal("Failed to determine friend status");
+            expect(res.body.message).to.equal(errorMessage);
         });
     });
     describe("All Friends", () => {
+        const id = "1234";
         it("Successfully retrieve all friends", async () => {
             sinon.stub(FriendService, 'allFriends').returns([]);
-            const res = await chai.request(app).get('/auth/all-friends');
+            const res = await chai.request(app).get('/auth/all-friends').query({id: id});
             expect(res.status).to.equal(200);
             expect(res.body.message).to.equal("Successfully found all the friends of the user"); 
             expect(res.body.friends).to.eql([]);
         });
         it("Error thrown", async () => {
-            sinon.stub(FriendService, 'allFriends').throws({message: "Failed to retrieve all friends"});
-            const res = await chai.request(app).get("/auth/all-friends");
+            const errorMessage = "Failed to retrieve all friends";
+            sinon.stub(FriendService, 'allFriends').throws({message: errorMessage});
+            const res = await chai.request(app).get("/auth/all-friends").query({id: id});
             expect(res.status).to.equal(400);
-            expect(res.body.message).to.equal("Failed to retrieve all friends");
+            expect(res.body.message).to.equal(errorMessage);
         });
     });
     describe("Add Friend", () => {
+        const recipientID = '1234';
         it("Successfully added friend", async () => {
             const retUser = {_id: "", name: "",  username: "", email: "", balance: 0, img: ""};
             sinon.stub(FriendService, 'addFriend').returns(retUser);
-            const res = await chai.request(app).post('/auth/add-friend');
+            const res = await chai.request(app).post('/auth/add-friend').send({recipientID: recipientID});
             expect(res.status).to.equal(200);
             expect(res.body.message).to.equal("Successfully sent friend request!");
             expect(res.body.user).to.eql(retUser);
         });
         it("Error thrown", async () => {
-            sinon.stub(FriendService, 'addFriend').throws({message: "Failed to add friend"});
-            const res = await chai.request(app).post("/auth/add-friend");
+            const errorMessage = "Failed to add friend";
+            sinon.stub(FriendService, 'addFriend').throws({message: errorMessage});
+            const res = await chai.request(app).post("/auth/add-friend").send({recipientID: recipientID});
             expect(res.status).to.equal(400);
-            expect(res.body.message).to.equal("Failed to add friend");
+            expect(res.body.message).to.equal(errorMessage);
         });
     });
     describe("Handle Friend Request", () => {
+        const recipientID = "1234";
+        const acceptedRequest = "true";
         it("Successfully handle friend request", async () => {
             const retUser = {_id: "", name: "",  username: "", email: "", balance: 0, img: ""};
             sinon.stub(FriendService, 'handleFriendRequest').returns(retUser);
-            const res = await chai.request(app).post('/auth/handle-friend-request');
+            const res = await chai.request(app).post('/auth/handle-friend-request').send({recipientID: recipientID, acceptedRequest: acceptedRequest});
             expect(res.status).to.equal(200);
             expect(res.body.message).to.equal("Successfully handled friend request");
             expect(res.body.user).to.eql(retUser);
         });
         it("Error thrown", async () => {
-            sinon.stub(FriendService, 'handleFriendRequest').throws({message: "Failed to handle friend request"});
-            const res = await chai.request(app).post("/auth/handle-friend-request");
+            const errorMessage = "Failed to handle friend request";
+            sinon.stub(FriendService, 'handleFriendRequest').throws({message: errorMessage});
+            const res = await chai.request(app).post("/auth/handle-friend-request").send({recipientID: recipientID, acceptedRequest: acceptedRequest});
             expect(res.status).to.equal(400);
-            expect(res.body.message).to.equal("Failed to handle friend request");
+            expect(res.body.message).to.equal(errorMessage);
         });
     });
     afterEach(() => {
         sinon.restore();
     });
 });
+sinon.restore();
