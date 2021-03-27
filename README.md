@@ -18,7 +18,11 @@ Node JS / Express Server for the SpotMe application which looks to provide an ea
     └── Base64.js                       # Class containing code that deals with Base64 formatting, this is specifically for our image storage 
     ├── TransactionService.js           # Class containing helper functions / database queries dealing with our application's transactions 
     └── utils.js                        # File will contain miscellaneous functions needed throughout our application, such as conversion functions 
+└── Tests                               # All of our unit and integration tests
+    ├── Controllers                     # Contains all of the tests for our controllers 
+    └── Services                        # Contains all of the tests for our services 
 ├── index.js                            # Main source file that app will use to render our routes and instantiate all necessary middleware
+
 
 ```
 
