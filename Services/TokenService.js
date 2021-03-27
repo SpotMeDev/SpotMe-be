@@ -16,7 +16,16 @@ const oktaJwtVerifier = new OktaJwtVerifier({
     clientId: process.env.CLIENT_ID
 });
 
+/**
+ * Okta-intialize checks if an JWt token has been passed in 
+ * 
+ */
 
+ /**
+  * 
+  * Generating a okta token
+  */
+ 
 /**
  * Creates a encrypted JWT based on the MongoDB user
  * @param {*} user - The user object.  We need this to set the JWT `sub` payload property to the MongoDB user ID 
