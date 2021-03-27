@@ -12,9 +12,10 @@ const ExtractJwt = require('passport-jwt').ExtractJwt;
 //testing new okta token verification
 const OktaJwtVerifier = require('@okta/jwt-verifier');
 const oktaJwtVerifier = new OktaJwtVerifier({
-    issuer: 'https://dev-96772784.okta.com/oauth2/default'
+    issuer: process.env.ISSUER,
+    clientId: process.env.CLIENT_ID
 });
-console.log(`From token service: ${oktaJwtVerifier}`)
+
 
 /**
  * Creates a encrypted JWT based on the MongoDB user
