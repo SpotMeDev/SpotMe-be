@@ -271,3 +271,4 @@ describe("Auth Controllers Tests", () => {
         sinon.restore();
     });
 });
+sinon.restore();
