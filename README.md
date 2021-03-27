@@ -38,6 +38,9 @@ Node JS / Express Server for the SpotMe application which looks to provide an ea
 9. Navigate to http://localhost:8080/. If you see a JSON response welcoming you to the SpotMe Back-end, you have successfully setup the project correctly.
 
 
+## Testing 
+Refer to README.md in the "Tests" folder to see how to run tests as well as add your own 
+
 ## Contributing 
 Look through the assigned GitHub issues / Trello cards for specific tasks or reach out to Gagandeep Kang. 
 
