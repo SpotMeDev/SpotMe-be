@@ -96,10 +96,12 @@ describe("Auth Controllers Tests", () => {
     });
 
     describe("Change Account Tests", () => {
+        const updateType = "username";
+        const updatedField = "newUsername";
         it("Successfully changed account information", async () => {
             const retUser = {id: "", name: "",  username: "", email: "", balance: 0, img: ""};
             sinon.stub(AuthService, 'changeAccount').returns(retUser);
-            const res = await chai.request(app).post("/auth/change-account");
+            const res = await chai.request(app).post("/auth/change-account").send({updateType: updateType, updatedField: updatedField });
             expect(res.status).to.equal(200);
             expect(res.body.message).to.equal("Succesfully updated the user!");
             expect(res.body.user).to.eql(retUser);
@@ -107,7 +109,7 @@ describe("Auth Controllers Tests", () => {
         it("Error thrown", async () => {
             const errorMessage = "Failed to change account information";
             sinon.stub(AuthService, 'changeAccount').throws({message: errorMessage});
-            const res = await chai.request(app).post("/auth/change-account");
+            const res = await chai.request(app).post("/auth/change-account").send({updateType: updateType, updatedField: updatedField});
             expect(res.status).to.equal(400);
             expect(res.body.message).to.equal(errorMessage);
         });
@@ -197,9 +199,10 @@ describe("Auth Controllers Tests", () => {
         });
     });
     describe("Search Query", () => {
+        const query = "user1";
         it("Successful query", async () => {
             sinon.stub(AuthService, 'searchUsers').returns([]);
-            const res = await chai.request(app).get("/auth/search-query");
+            const res = await chai.request(app).get("/auth/search-query").query({query: query});
             expect(res.status).to.equal(200);
             expect(res.body.message).to.equal("Successfully retrieved all users with the query");
             expect(res.body.users).to.eql([]);
@@ -207,15 +210,16 @@ describe("Auth Controllers Tests", () => {
         it("Error thrown", async () => {
             const errorMessage = "Failed to retrieve all users with the query";
             sinon.stub(AuthService, 'searchUsers').throws({message: errorMessage});
-            const res = await chai.request(app).get("/auth/search-query");
+            const res = await chai.request(app).get("/auth/search-query").query({query: query});
             expect(res.status).to.equal(400);
             expect(res.body.message).to.equal(errorMessage);
         });
     });
     describe("Is Friend", () => {
+        const friendID = "1234";
         it("Successfully determined friend status", async () => {
             sinon.stub(FriendService, 'friendStatus').returns(1);
-            const res = await chai.request(app).get("/auth/is-friend");
+            const res = await chai.request(app).get("/auth/is-friend").query({rID: friendID});
             expect(res.status).to.equal(200);
             expect(res.body.message).to.equal("Sucessfully determined friend status");
             expect(res.body.status).to.equal(1);
@@ -223,15 +227,16 @@ describe("Auth Controllers Tests", () => {
         it("Error thrown", async () => {
             const errorMessage = "Failed to determine friend status";
             sinon.stub(FriendService, 'friendStatus').throws({message: errorMessage});
-            const res = await chai.request(app).get("/auth/is-friend");
+            const res = await chai.request(app).get("/auth/is-friend").query({rID: friendID});
             expect(res.status).to.equal(400);
             expect(res.body.message).to.equal(errorMessage);
         });
     });
     describe("All Friends", () => {
+        const id = "1234";
         it("Successfully retrieve all friends", async () => {
             sinon.stub(FriendService, 'allFriends').returns([]);
-            const res = await chai.request(app).get('/auth/all-friends');
+            const res = await chai.request(app).get('/auth/all-friends').query({id: id});
             expect(res.status).to.equal(200);
             expect(res.body.message).to.equal("Successfully found all the friends of the user"); 
             expect(res.body.friends).to.eql([]);
@@ -239,16 +244,17 @@ describe("Auth Controllers Tests", () => {
         it("Error thrown", async () => {
             const errorMessage = "Failed to retrieve all friends";
             sinon.stub(FriendService, 'allFriends').throws({message: errorMessage});
-            const res = await chai.request(app).get("/auth/all-friends");
+            const res = await chai.request(app).get("/auth/all-friends").query({id: id});
             expect(res.status).to.equal(400);
             expect(res.body.message).to.equal(errorMessage);
         });
     });
     describe("Add Friend", () => {
+        const recipientID = '1234';
         it("Successfully added friend", async () => {
             const retUser = {_id: "", name: "",  username: "", email: "", balance: 0, img: ""};
             sinon.stub(FriendService, 'addFriend').returns(retUser);
-            const res = await chai.request(app).post('/auth/add-friend');
+            const res = await chai.request(app).post('/auth/add-friend').send({recipientID: recipientID});
             expect(res.status).to.equal(200);
             expect(res.body.message).to.equal("Successfully sent friend request!");
             expect(res.body.user).to.eql(retUser);
@@ -256,16 +262,18 @@ describe("Auth Controllers Tests", () => {
         it("Error thrown", async () => {
             const errorMessage = "Failed to add friend";
             sinon.stub(FriendService, 'addFriend').throws({message: errorMessage});
-            const res = await chai.request(app).post("/auth/add-friend");
+            const res = await chai.request(app).post("/auth/add-friend").send({recipientID: recipientID});
             expect(res.status).to.equal(400);
             expect(res.body.message).to.equal(errorMessage);
         });
     });
     describe("Handle Friend Request", () => {
+        const recipientID = "1234";
+        const acceptedRequest = "true";
         it("Successfully handle friend request", async () => {
             const retUser = {_id: "", name: "",  username: "", email: "", balance: 0, img: ""};
             sinon.stub(FriendService, 'handleFriendRequest').returns(retUser);
-            const res = await chai.request(app).post('/auth/handle-friend-request');
+            const res = await chai.request(app).post('/auth/handle-friend-request').send({recipientID: recipientID, acceptedRequest: acceptedRequest});
             expect(res.status).to.equal(200);
             expect(res.body.message).to.equal("Successfully handled friend request");
             expect(res.body.user).to.eql(retUser);
@@ -273,7 +281,7 @@ describe("Auth Controllers Tests", () => {
         it("Error thrown", async () => {
             const errorMessage = "Failed to handle friend request";
             sinon.stub(FriendService, 'handleFriendRequest').throws({message: errorMessage});
-            const res = await chai.request(app).post("/auth/handle-friend-request");
+            const res = await chai.request(app).post("/auth/handle-friend-request").send({recipientID: recipientID, acceptedRequest: acceptedRequest});
             expect(res.status).to.equal(400);
             expect(res.body.message).to.equal(errorMessage);
         });
