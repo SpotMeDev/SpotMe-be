@@ -66,7 +66,7 @@ const changePassword = async (user, currentPassword, newPassword) => {
     if (isMatch) {
       // create a hash of the new password
       const hashedPassword = await bcrypt.hash(newPassword, 10);
-      const newUser = await User.findOneAndUpdate({_id: user._id}, {$set: {password: hashedPassword}}, {new: true});
+      await User.findOneAndUpdate({_id: user._id}, {$set: {password: hashedPassword}}, {new: true});
       return true;
     } else {
       throw new Error('Current Password does not match the user');
@@ -182,7 +182,7 @@ const updateProfilePic = async (user, data) => {
   try {
     const buffer = Buffer.from(data, 'base64');
     const newImage = await Image.create({img: {data: buffer, contentType: 'img/jpeg'}});
-    const newUser = await User.findOneAndUpdate({_id: user._id}, {$set: {profileImg: newImage._id}}, {new: true});
+    await User.findOneAndUpdate({_id: user._id}, {$set: {profileImg: newImage._id}}, {new: true});
     return true;
   } catch (err) {
     throw err;

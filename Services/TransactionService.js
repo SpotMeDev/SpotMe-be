@@ -28,7 +28,7 @@ const createTransaction = async (user, recipientID, message, amount) => {
 
       const retUser = await AuthService.returnUserDetails(updatedSender, true);
       // create the transaction
-      const transaction = await Transaction.create({sender: updatedSender._id, recipient: updatedRecipient._id, amount: amount, message: message});
+      await Transaction.create({sender: updatedSender._id, recipient: updatedRecipient._id, amount: amount, message: message});
       return retUser;
     } else {
       throw new Error('Insufficient balance to complete request');

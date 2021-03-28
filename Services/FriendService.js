@@ -88,7 +88,7 @@ const addFriend = async (user, recipientID) => {
 
     // update the user objects
     const newSender = await User.findOneAndUpdate({_id: sender._id}, {$push: {friends: senderFriendReq._id}}, {new: true});
-    const newRecipient = await User.findOneAndUpdate({_id: recipient._id}, {$push: {friends: recipientFriendReq._id}}, {new: true});
+    await User.findOneAndUpdate({_id: recipient._id}, {$push: {friends: recipientFriendReq._id}}, {new: true});
     const retUser = await AuthService.returnUserDetails(newSender, true);
     return retUser;
   } catch (err) {
@@ -109,8 +109,8 @@ const handleFriendRequest = async (user, recipientID, acceptedRequest) => {
     const recipient = await User.findById(recipientID);
     if (acceptedRequest === 'true') {
       // update the friends schema
-      const updateSenderFriend = await Friends.findOneAndUpdate({requester: sender._id, recipient: recipient._id}, {$set: {status: 3}});
-      const updateRecipientFriend = await Friends.findOneAndUpdate({requester: recipient._id, recipient: sender._id}, {$set: {status: 3}});
+      await Friends.findOneAndUpdate({requester: sender._id, recipient: recipient._id}, {$set: {status: 3}});
+      await Friends.findOneAndUpdate({requester: recipient._id, recipient: sender._id}, {$set: {status: 3}});
       const retUser = await AuthService.returnUserDetails(sender, true);
       return retUser;
     } else {
@@ -120,7 +120,7 @@ const handleFriendRequest = async (user, recipientID, acceptedRequest) => {
 
       // remove the friends from each of the user's objects
       const updatedSender = await User.findOneAndUpdate({_id: sender._id}, {$pull: {friends: remSender._id}}, {new: true});
-      const updatedRecipient = await User.findOneAndUpdate({_id: recipient._id}, {$pull: {friends: remRecipient._id}}, {new: true});
+      await User.findOneAndUpdate({_id: recipient._id}, {$pull: {friends: remRecipient._id}}, {new: true});
       const retUser = await AuthService.returnUserDetails(updatedSender, true);
       return retUser;
     }
