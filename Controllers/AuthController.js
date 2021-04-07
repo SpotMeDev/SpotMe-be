@@ -4,12 +4,10 @@ const router = express.Router();
 const passport = require('passport');
 const AuthService = require('../Services/AuthService');
 const FriendService = require('../Services/FriendService');
+const AuthMiddleware = require('../Middleware/authMiddleware');
 
-router.post('/signup', async (req, res) => {
+router.post('/signup', AuthMiddleware.signupInput, async (req, res) => {
   try {
-    if (req.body.password !== req.body.confirmPassword || (req.body.password === '' || req.body.confirmPassword === '')) {
-      return res.status(400).send({message: 'Your passsword and confirm password must match'});
-    }
     // check that email and username is not already used
     const userWithEmail = await AuthService.userWithEmail(req.body.email);
     if (userWithEmail) {

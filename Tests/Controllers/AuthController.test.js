@@ -33,22 +33,22 @@ describe('Auth Controllers Tests', () => {
     it('Password and Confirm Password are not equal', async () => {
       const res = await chai.request(app).post('/auth/signup').send({name: name, username: username, email: email, password: password, confirmPassword: '123'});
       expect(res.status).to.equal(400);
-      expect(res.body.message).to.equal('Your passsword and confirm password must match');
+      expect(res.body.message).to.equal('Invalid input! Please provide a proper input and try again');
     });
     it('Empty Password', async () => {
       const res = await chai.request(app).post('/auth/signup').send({name: name, username: username, email: email, password: '', confirmPassword: password});
       expect(res.status).to.equal(400);
-      expect(res.body.message).to.equal('Your passsword and confirm password must match');
+      expect(res.body.message).to.equal('Invalid input! Please provide a proper input and try again');
     });
     it('Empty Confirm Password', async () => {
       const res = await chai.request(app).post('/auth/signup').send({name: name, username: username, email: email, password: password, confirmPassword: ''});
       expect(res.status).to.equal(400);
-      expect(res.body.message).to.equal('Your passsword and confirm password must match');
+      expect(res.body.message).to.equal('Invalid input! Please provide a proper input and try again');
     });
     it('Both password and confirm password empty', async () => {
       const res = await chai.request(app).post('/auth/signup').send({name: name, username: username, email: email, password: '', confirmPassword: ''});
       expect(res.status).to.equal(400);
-      expect(res.body.message).to.equal('Your passsword and confirm password must match');
+      expect(res.body.message).to.equal('Invalid input! Please provide a proper input and try again');
     });
     it('User with email already exists', async () => {
       sinon.stub(AuthService, 'userWithEmail').returns(true);
@@ -57,6 +57,7 @@ describe('Auth Controllers Tests', () => {
       expect(res.body.message).to.equal('Email is already in use. Please use another email address or sign in');
     });
     it('User with username already exists', async () => {
+      sinon.stub(AuthService, 'userWithEmail').returns(false);
       sinon.stub(AuthService, 'userWithUsername').returns(true);
       const res = await chai.request(app).post('/auth/signup').send({name: name, username: username, email: email, password: password, confirmPassword: password});
       expect(res.status).to.equal(403);
