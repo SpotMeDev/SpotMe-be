@@ -65,7 +65,7 @@ describe('Auth Controllers Tests', () => {
     });
     it('Error thrown', async () => {
       const errorMessage = 'Failed to signup';
-      sinon.stub(AuthService, 'userWithEmail').throws({message: errorMessage});
+      sinon.stub(AuthService, 'signupUser').throws({message: errorMessage});
       const res = await chai.request(app).post('/auth/signup').send({name: name, username: username, email: email, password: password, confirmPassword: password});
       expect(res.status).to.equal(400);
       expect(res.body.message).to.equal(errorMessage);

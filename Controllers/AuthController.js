@@ -8,15 +8,6 @@ const AuthMiddleware = require('../Middleware/authMiddleware');
 
 router.post('/signup', AuthMiddleware.signupInput, async (req, res) => {
   try {
-    // check that email and username is not already used
-    const userWithEmail = await AuthService.userWithEmail(req.body.email);
-    if (userWithEmail) {
-      return res.status(403).send({message: 'Email is already in use. Please use another email address or sign in'});
-    }
-    const userWithUsername = await AuthService.userWithUsername(req.body.username);
-    if (userWithUsername) {
-      return res.status(403).send({message: 'Username is already in use. Please select another username or sign in'});
-    }
     const {jwt, retUser} = await AuthService.signupUser(req.body.name, req.body.username, req.body.email, req.body.password);
     return res.status(200).send({message: 'Successfully signed up the user!', token: jwt.token, expiresIn: jwt.expires, user: retUser});
   } catch (err) {
