@@ -20,7 +20,19 @@ extend('unique', async ({value, args}) => {
   return true;
 });
 
-const signupInput = async (req, res, next) => {
+extend('different', async ({value, args}, validator) => {
+  const field = args[0];
+  if (field === '' || !field) {
+    throw new Error('Invalid use of different rule!');
+  }
+  const otherValue = validator.inputs[args[0]];
+  if (value === otherValue) {
+    return false;
+  }
+  return true;
+});
+
+const validateSignup = async (req, res, next) => {
   const validate = new Validator(req.body, {
     name: 'required',
     username: 'required|unique:username',
@@ -45,6 +57,128 @@ const signupInput = async (req, res, next) => {
   }
 };
 
+const validateLogin = async (req, res, next) => {
+  const validate = new Validator(req.body, {
+    email: 'required|email',
+    password: 'required',
+  });
+  const matched = await validate.check();
+  if (!matched) {
+    return res.status(400).send({message: 'Invalid input! Please provide a proper input and try again'});
+  } else {
+    next();
+  }
+};
+
+const validateChangeAccount = async (req, res, next) => {
+  const validate = new Validator(req.body, {
+    updateType: 'required',
+    updatedField: 'required',
+  });
+  const matched = await validate.check();
+  if (!matched) {
+    return res.status(400).send({message: 'Invalid input! Please provide a proper input and try again'});
+  } else {
+    next();
+  }
+};
+
+const validateChangePassword = async (req, res, next) => {
+  const validate = new Validator(req.body, {
+    currentPassword: 'required',
+    newPassword: 'required|different:currentPassword',
+    confirmPassword: 'required|same:newPassword',
+  });
+  const matched = await validate.check();
+  if (!matched) {
+    return res.status(400).send({message: 'Invalid input! Please provide a proper input and try again'});
+  } else {
+    next();
+  }
+};
+
+const validateUpdateProfilePicture = async (req, res, next) => {
+  const validate = new Validator(req.body, {
+    profileData64: 'required',
+  });
+  const matched = await validate.check();
+  if (!matched) {
+    return res.status(400).send({message: 'Invalid input! Please provide a proper input and try again'});
+  } else {
+    next();
+  }
+};
+
+const validateSearchQuery = async (req, res, next) => {
+  const validate = new Validator(req.query, {
+    query: 'required',
+  });
+  const matched = await validate.check();
+  if (!matched) {
+    return res.status(400).send({message: 'Invalid input! Please provide a proper input and try again'});
+  } else {
+    next();
+  }
+};
+
+const validateIsFriend = async (req, res, next) => {
+  const validate = new Validator(req.query, {
+    rID: 'required',
+  });
+  const matched = await validate.check();
+  if (!matched) {
+    return res.status(400).send({message: 'Invalid input! Please provide a proper input and try again'});
+  } else {
+    next();
+  }
+};
+
+const validateAllFriends = async (req, res, next) => {
+  const validate = new Validator(req.query, {
+    id: 'required',
+  });
+  const matched = await validate.check();
+  if (!matched) {
+    return res.status(400).send({message: 'Invalid input! Please provide a proper input and try again'});
+  } else {
+    next();
+  }
+};
+
+const validateAddFriend = async (req, res, next) => {
+  const validate = new Validator(req.body, {
+    recipientID: 'required',
+  });
+  const matched = await validate.check();
+  if (!matched) {
+    return res.status(400).send({message: 'Invalid input! Please provide a proper input and try again'});
+  } else {
+    next();
+  }
+};
+
+const validateHandleFriendRequest = async (req, res, next) => {
+  const validate = new Validator(req.body, {
+    recipientID: 'required',
+    acceptedRequest: 'required',
+  });
+  const matched = await validate.check();
+  if (!matched) {
+    return res.status(400).send({message: 'Invalid input! Please provide a proper input and try again'});
+  } else {
+    next();
+  }
+};
+
 module.exports = {
-  signupInput: signupInput,
+  validateSignup: validateSignup,
+  validateLogin: validateLogin,
+  validateChangeAccount: validateChangeAccount,
+  validateChangePassword: validateChangePassword,
+  validateUpdateProfilePicture: validateUpdateProfilePicture,
+  validateSearchQuery: validateSearchQuery,
+  validateIsFriend: validateIsFriend,
+  validateAllFriends: validateAllFriends,
+  validateAddFriend: validateAddFriend,
+  validateHandleFriendRequest: validateHandleFriendRequest,
 };

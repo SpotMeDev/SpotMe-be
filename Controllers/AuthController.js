@@ -6,7 +6,7 @@ const AuthService = require('../Services/AuthService');
 const FriendService = require('../Services/FriendService');
 const AuthMiddleware = require('../Middleware/authMiddleware');
 
-router.post('/signup', AuthMiddleware.signupInput, async (req, res) => {
+router.post('/signup', AuthMiddleware.validateSignup, async (req, res) => {
   try {
     const {jwt, retUser} = await AuthService.signupUser(req.body.name, req.body.username, req.body.email, req.body.password);
     return res.status(200).send({message: 'Successfully signed up the user!', token: jwt.token, expiresIn: jwt.expires, user: retUser});
@@ -16,7 +16,7 @@ router.post('/signup', AuthMiddleware.signupInput, async (req, res) => {
 });
 
 
-router.post('/login', async (req, res) => {
+router.post('/login', AuthMiddleware.validateLogin, async (req, res) => {
   try {
     const {jwt, retUser} = await AuthService.loginUser(req.body.email, req.body.password);
     return res.status(200).send({message: 'Successfully logged in the user!', token: jwt.token, expiresIn: jwt.expires, user: retUser});
@@ -26,7 +26,7 @@ router.post('/login', async (req, res) => {
 });
 
 // route specifically for username or name, seperate route for password
-router.post('/change-account', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.post('/change-account', AuthMiddleware.validateChangeAccount, passport.authenticate('jwt', {session: false}), async (req, res) => {
   try {
     const updatedUser = await AuthService.changeAccount(req.user, req.body.updateType, req.body.updatedField);
     return res.status(200).send({message: 'Succesfully updated the user!', user: updatedUser});
@@ -37,19 +37,9 @@ router.post('/change-account', passport.authenticate('jwt', {session: false}), a
 
 
 // route specifically to change password
-router.post('/change-password', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.post('/change-password', AuthMiddleware.validateChangePassword, passport.authenticate('jwt', {session: false}), async (req, res) => {
   try {
     const user = req.user;
-    if (req.body.currentPassword === '' || req.body.newPassword === '' || req.body.confirmPassword === '') {
-      return res.status(400).send({message: 'Passwords can\'t be empty'});
-    }
-    if (req.body.newPassword !== req.body.confirmPassword) {
-      return res.status(400).send({message: 'New Password and Confirm Password must match'});
-    }
-    if (req.body.currentPassword === req.body.newPassword) {
-      return res.status(400).send({message: 'New password must be different from the current password!'});
-    }
-
     const changedPassword = await AuthService.changePassword(user, req.body.currentPassword, req.body.newPassword);
     if (changedPassword) {
       return res.status(200).send({message: 'Successfully changed password'});
@@ -62,21 +52,17 @@ router.post('/change-password', passport.authenticate('jwt', {session: false}), 
 });
 
 
-router.post('/update-profile-pic', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.post('/update-profile-pic', AuthMiddleware.validateUpdateProfilePicture, passport.authenticate('jwt', {session: false}), async (req, res) => {
   try {
     const user = req.user;
-    if (req.body.profileData64) {
-      // do we need this extra ret64 computation if we already have the profileData64?
-      const upload = await AuthService.updateProfilePic(user, req.body.profileData64);
-      if (upload) {
-        const retUser = await AuthService.returnUserDetails(user, true);
-        return res.status(200).send({message: 'Successfully updated profile picture', user: retUser});
-      } else {
-        // error uploading the profile picture
-        return res.status(400).send({message: 'Unable to update profile picture at this time'});
-      }
+    // do we need this extra ret64 computation if we already have the profileData64?
+    const upload = await AuthService.updateProfilePic(user, req.body.profileData64);
+    if (upload) {
+      const retUser = await AuthService.returnUserDetails(user, true);
+      return res.status(200).send({message: 'Successfully updated profile picture', user: retUser});
     } else {
-      return res.status(400).send({message: 'Must include valid profile picture'});
+      // error uploading the profile picture
+      return res.status(400).send({message: 'Unable to update profile picture at this time'});
     }
   } catch (err) {
     return res.status(400).send({message: err.message});
@@ -94,7 +80,7 @@ router.get('/profile-pic', passport.authenticate('jwt', {session: false}), async
 });
 
 
-router.get('/search-query', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/search-query', AuthMiddleware.validateSearchQuery, passport.authenticate('jwt', {session: false}), async (req, res) => {
   try {
     const ret = await AuthService.searchUsers(req.query.query);
     return res.status(200).send({message: 'Successfully retrieved all users with the query', users: ret});
@@ -103,7 +89,7 @@ router.get('/search-query', passport.authenticate('jwt', {session: false}), asyn
   }
 });
 
-router.get('/is-friend', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/is-friend', AuthMiddleware.validateIsFriend, passport.authenticate('jwt', {session: false}), async (req, res) => {
   try {
     const sender = req.user;
     const friendStatus = await FriendService.friendStatus(sender._id, req.query.rID);
@@ -113,7 +99,7 @@ router.get('/is-friend', passport.authenticate('jwt', {session: false}), async (
   }
 });
 
-router.get('/all-friends', async (req, res) => {
+router.get('/all-friends', AuthMiddleware.validateAllFriends, async (req, res) => {
   try {
     const id = req.query.id;
     const friends = await FriendService.allFriends(id);
@@ -123,7 +109,7 @@ router.get('/all-friends', async (req, res) => {
   }
 });
 
-router.post('/add-friend', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.post('/add-friend', AuthMiddleware.validateAddFriend, passport.authenticate('jwt', {session: false}), async (req, res) => {
   // create the two friend schemas for the user sending request and also the recipient
   try {
     const retUser = await FriendService.addFriend(req.user, req.body.recipientID);
@@ -134,7 +120,7 @@ router.post('/add-friend', passport.authenticate('jwt', {session: false}), async
 });
 
 
-router.post('/handle-friend-request', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.post('/handle-friend-request', AuthMiddleware.validateHandleFriendRequest, passport.authenticate('jwt', {session: false}), async (req, res) => {
   try {
     const retUser = await FriendService.handleFriendRequest(req.user, req.body.recipientID, req.body.acceptedRequest);
     return res.status(200).send({message: 'Successfully handled friend request', user: retUser});
