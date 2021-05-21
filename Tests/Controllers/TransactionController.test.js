@@ -26,6 +26,18 @@ describe('Transaction Controller Tests', () => {
       expect(res.body.message).to.equal('Succesfully created transaction');
       expect(res.body.user).to.eql(retUser);
     });
+    it('Empty Parameters', async () => {
+      const errorMessage = 'Invalid input! Please provide a proper input and try again';
+      const res = await chai.request(app).post('/transaction/send').send({recipientID: '', message: '', amount: ''});
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal(errorMessage);
+    });
+    it('Undefined Parameters', async () => {
+      const errorMessage = 'Invalid input! Please provide a proper input and try again';
+      const res = await chai.request(app).post('/transaction/send');
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal(errorMessage);
+    });
     it('Error thrown in route', async () => {
       const errorMessage = 'Unable to complete transaction at this time!';
       sinon.stub(TransactionService, 'createTransaction').throws({message: errorMessage});
@@ -40,6 +52,18 @@ describe('Transaction Controller Tests', () => {
       const res = await chai.request(app).post('/transaction/add-balance').send({amount: amount});
       expect(res.status).to.equal(200);
       expect(res.body.message).to.equal('Successfully updated your balance');
+    });
+    it('Empty Parameters', async () => {
+      const errorMessage = 'Invalid input! Please provide a proper input and try again';
+      const res = await chai.request(app).post('/transaction/add-balance').send({amount: ''});
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal(errorMessage);
+    });
+    it('Undefined Parameters', async () => {
+      const errorMessage = 'Invalid input! Please provide a proper input and try again';
+      const res = await chai.request(app).post('/transaction/add-balance');
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal(errorMessage);
     });
     it('Error thrown in route', async () => {
       const errorMessage = 'Unable to modify balance at this time';
