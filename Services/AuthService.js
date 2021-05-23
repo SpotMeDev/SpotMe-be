@@ -1,6 +1,6 @@
 const User = require('../models/user');
 const Image = require('../models/image');
-const Utils = require('../services/utils');
+const Utils = require('../Services/utils');
 const bcrypt = require('bcrypt');
 const TokenService = require('./TokenService');
 
