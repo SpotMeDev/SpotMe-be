@@ -73,13 +73,13 @@ const allUserTransactions = async (user) => {
         const retRecipient = await AuthService.returnUserDetails(recipient);
         userIsSender = true;
         const formattedDate = dateConversion(transaction.createdAt);
-        ret.push({id: transaction._id, sender: retUser, recipient: retRecipient, amount: transaction.amount, message: transaction.message, createdAt: formattedDate, created: transaction.createdAt, userIsSender: userIsSender});
+        ret.push({_id: transaction._id, sender: retUser, recipient: retRecipient, amount: transaction.amount, message: transaction.message, createdAt: formattedDate, created: transaction.createdAt, userIsSender: userIsSender});
       } else {
         const sender = await User.findById(transaction.sender);
         const retUser = await AuthService.returnUserDetails(user);
         const retSender = await AuthService.returnUserDetails(sender);
         const formattedDate = dateConversion(transaction.createdAt);
-        ret.push({id: transaction._id, sender: retSender, recipient: retUser, amount: transaction.amount, message: transaction.message, createdAt: formattedDate, created: transaction.createdAt, userIsSender: userIsSender});
+        ret.push({_id: transaction._id, sender: retSender, recipient: retUser, amount: transaction.amount, message: transaction.message, createdAt: formattedDate, created: transaction.createdAt, userIsSender: userIsSender});
       }
     }));
     if (ret.length > 0) {
@@ -109,11 +109,11 @@ const allFriendsTransactions = async (user) => {
     });
     // now for each friend, iterate through their transactions and add to array
     await Promise.all(friends.map(async (friend) => {
-      const newFriend = await User.findById(friend.id);
+      const newFriend = await User.findById(friend._id);
       const currentTransaction = await allUserTransactions(newFriend);
       currentTransaction.forEach((transaction) => {
-        if (!set.has(transaction.id.toString())) {
-          set.add(transaction.id.toString());
+        if (!set.has(transaction._id.toString())) {
+          set.add(transaction._id.toString());
           ret.push(transaction);
         }
       });

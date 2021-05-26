@@ -20,7 +20,7 @@ describe('Auth Controllers Tests', () => {
     const password = 'password';
     it('Succesfully signs up', async () => {
       const jwt = {token: '', expires: '1d'};
-      const retUser = {id: '', name: name, username: username, email: email, balance: 0, img: ''};
+      const retUser = {_id: '', name: name, username: username, email: email, balance: 0, img: ''};
       sinon.stub(AuthService, 'userWithEmail').returns(false);
       sinon.stub(AuthService, 'userWithUsername').returns(false);
       sinon.stub(AuthService, 'signupUser').returns({jwt: jwt, retUser: retUser});
@@ -78,7 +78,7 @@ describe('Auth Controllers Tests', () => {
     const password = 'password';
     it('Successful login', async () => {
       const jwt = {token: '', expires: '1d'};
-      const retUser = {id: '', name: name, username: username, email: email, balance: 0, img: ''};
+      const retUser = {_id: '', name: name, username: username, email: email, balance: 0, img: ''};
       sinon.stub(AuthService, 'loginUser').returns({jwt: jwt, retUser: retUser});
       const res = await chai.request(app).post('/auth/login').send({email: email, password: password});
       expect(res.status).to.equal(200);
@@ -106,7 +106,7 @@ describe('Auth Controllers Tests', () => {
     const updateType = 'username';
     const updatedField = 'newUsername';
     it('Successfully changed account information', async () => {
-      const retUser = {id: '', name: '', username: '', email: '', balance: 0, img: ''};
+      const retUser = {_id: '', name: '', username: '', email: '', balance: 0, img: ''};
       sinon.stub(AuthService, 'changeAccount').returns(retUser);
       const res = await chai.request(app).post('/auth/change-account').send({updateType: updateType, updatedField: updatedField});
       expect(res.status).to.equal(200);
@@ -169,7 +169,7 @@ describe('Auth Controllers Tests', () => {
   describe('Update Profile Picture Route', () => {
     const profileData64 = 'testData';
     it('Successfully update profile picture', async () => {
-      const retUser = {id: '', name: '', username: '', email: '', balance: 0, img: ''};
+      const retUser = {_id: '', name: '', username: '', email: '', balance: 0, img: ''};
       sinon.stub(AuthService, 'updateProfilePic').returns(true);
       sinon.stub(AuthService, 'returnUserDetails').returns(retUser);
       const res = await chai.request(app).post('/auth/update-profile-pic').send({profileData64: profileData64});

@@ -56,7 +56,7 @@ const allFriends = async (id) => {
           if (friendDoc.status === 3) {
             // using the id of the recipient, we will find the
             const recipient = await User.findById(friendDoc.recipient);
-            ret.push({id: recipient._id, friends: recipient.friends, name: recipient.name, username: recipient.username, email: recipient.email});
+            ret.push({_id: recipient._id, friends: recipient.friends, name: recipient.name, username: recipient.username, email: recipient.email});
           }
         }));
         return ret;
