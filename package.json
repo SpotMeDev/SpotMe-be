@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "export NODE_ENV=test && nodemon --exec 'mocha 'Tests/**/*.test.js' --recursive --timeout 1000000 --reporter spec'",
-    "devStart": "nodemon index.js", 
+    "devStart": "nodemon index.js",
     "lint": "eslint"
   },
   "repository": {
@@ -28,6 +28,7 @@
     "jsonwebtoken": "^8.5.1",
     "mocha": "^8.3.2",
     "mongoose": "^5.9.24",
+    "node-input-validator": "^4.4.1",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
