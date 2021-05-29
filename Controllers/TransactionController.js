@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const TransactionService = require('../Services/TransactionService');
+const FireBaseService = require("../Services/FireBaseService");
 
 router.post('/send', passport.authenticate('jwt', {session: false}), async (req, res) => {
   try {
@@ -23,7 +24,7 @@ router.post('/add-balance', passport.authenticate('jwt', {session: false}), asyn
 });
 
 
-router.get('/user-transactions', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/user-transactions', FireBaseService.Authenticate, async (req, res) => {
   try {
     const user = req.user;
     const transactions = await TransactionService.allUserTransactions(user);
@@ -33,7 +34,7 @@ router.get('/user-transactions', passport.authenticate('jwt', {session: false}),
   }
 });
 
-router.get('/all-transactions', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/all-transactions', FireBaseService.Authenticate, async (req, res) => {
   try {
     const user = req.user;
     const transactions = await TransactionService.allFriendsTransactions(user);

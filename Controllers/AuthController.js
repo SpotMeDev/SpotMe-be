@@ -4,6 +4,34 @@ const router = express.Router();
 const passport = require('passport');
 const AuthService = require('../Services/AuthService');
 const FriendService = require('../Services/FriendService');
+const FireBaseService = require("../Services/FireBaseService");
+const { reset } = require('sinon');
+//test router for singing in a user
+router.post('/createuser', async (req,res) => {
+  try{
+      const {token, user} = await AuthService.createUser(req.body.username, req.body.email, req.body.phoneNumber, req.body.password);
+      res.status(200).send({message: "Successfully signed up User!", CustomToken: token, user: user});
+  } catch(err){
+    console.log(err);
+    res.status(400).send({message: err})
+  }
+});
+//test route to verify the ID token passed in from the client side
+router.get('/uid', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if(authHeader != null) {
+      const uid = await FireBaseService.Verify(authHeader);
+      console.log(`uid: ${uid}`);
+      res.status(200).send({uid: uid});
+    } else{
+      res.status(400).send({message: "No authorization header passed in"});
+    }
+
+  } catch(err) {
+    res.status(400).send({message: err});
+  }
+})
 
 router.post('/signup', async (req, res) => {
   try {

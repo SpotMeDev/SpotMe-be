@@ -16,6 +16,13 @@ const mongoose = require('mongoose');
 mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@spotme.lidfh.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`, {useNewUrlParser: true});
 mongoose.set('useFindAndModify', false);
 
+//firebase connection
+const FireBase_Admin = require('firebase-admin');
+const FireBase_Credentials = require('./spotme-nod-firebase-adminsdk-3ks6g-e3edbc0182.json')
+
+FireBase_Admin.initializeApp({
+  credential: FireBase_Admin.credential.cert(FireBase_Credentials)
+})
 // Body parser
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));

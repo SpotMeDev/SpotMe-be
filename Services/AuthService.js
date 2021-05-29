@@ -3,6 +3,48 @@ const Image = require('../models/image');
 const Utils = require('../services/utils');
 const bcrypt = require('bcrypt');
 const TokenService = require('./TokenService');
+const FireBase_Admin = require('firebase-admin');
+// Test creating a user in friebase account through admin SDK for user authentication
+const createUser = async (username, email, phoneNumber, password) => {
+  try {
+    let newUser =  await FireBase_Admin.auth()
+                          .createUser({
+                            email: email,
+                            emailVerified: false,
+                            phoneNumber: phoneNumber,
+                            password: password,
+                            displayName: username
+                          });
+    //store user in the database
+    User.create({
+      _id: newUser.uid,
+      name: username,
+      username: username,
+      email: email,
+      //will check with team to remove the passcode
+      balance: 0
+    }).then(() => {
+        console.log("User saved in database");
+    }).catch((err) => {
+        console.log(err);
+        throw err;
+    });
+
+    const CustomToken = await FireBase_Admin.auth().createCustomToken(newUser.uid);
+    console.log(CustomToken);
+    // returning json of JWT token
+    return {
+      token: CustomToken,
+      user: {
+        email: newUser.email,
+        username: newUser.displayName,
+        phoneNumber: newUser.phoneNumber
+      }
+    }
+  } catch(err) {
+    throw err;
+  }
+}
 
 /**
  * Takes in necessary profile information and creates a user object in our database.
@@ -239,5 +281,6 @@ module.exports = {
   updateProfilePic: updateProfilePic,
   retrieveProfilePic: retrieveProfilePic,
   returnUserDetails: returnUserDetails,
+  createUser: createUser,
 };
 
