@@ -4,10 +4,20 @@ const Utils = require('../services/utils');
 const bcrypt = require('bcrypt');
 const TokenService = require('./TokenService');
 const FireBase_Admin = require('firebase-admin');
-// Test creating a user in friebase account through admin SDK for user authentication
-const createUser = async (username, email, phoneNumber, password) => {
+const FireBaseService = require('./FireBaseService');
+/**
+ * Takes in necessary profile information and creates a user object in our database.
+ * Creates a new user in our FireBase console
+ * @param   {string} name
+ * @param   {string} username
+ * @param   {string} email
+ * @param   {string} password users passwords will be encrypted and stored in FireBase
+ * @param   {string} phoneNumber users phoneNumber will be stored in firebase only for now
+ * @return {object} the encrypted FireBase authentication token to authenticate a user upon signup along with user information
+ */
+const signupUser = async (name, username, email, phoneNumber, password) => {
   try {
-    let newUser =  await FireBase_Admin.auth()
+    let user =  await FireBase_Admin.auth()
                           .createUser({
                             email: email,
                             emailVerified: false,
@@ -16,31 +26,22 @@ const createUser = async (username, email, phoneNumber, password) => {
                             displayName: username
                           });
     //store user in the database
-    User.create({
-      _id: newUser.uid,
-      name: username,
+    const newUser = await User.create({
+      _id: user.uid,
+      name: name,
       username: username,
       email: email,
-      //will check with team to remove the passcode
+      phoneNumber: phoneNumber,
       balance: 0
-    }).then(() => {
-        console.log("User saved in database");
-    }).catch((err) => {
-        console.log(err);
-        throw err;
     });
+    console.log("User created in database");
 
-    const CustomToken = await FireBase_Admin.auth().createCustomToken(newUser.uid);
-    console.log(CustomToken);
+    //const CustomToken = await FireBase_Admin.auth().createCustomToken(user.uid);
+    const token =  await FireBaseService.FireBaseIDtoken(email, password);
+    console.log(token);
+    const retUser = await returnUserDetails(newUser, true);
     // returning json of JWT token
-    return {
-      token: CustomToken,
-      user: {
-        email: newUser.email,
-        username: newUser.displayName,
-        phoneNumber: newUser.phoneNumber
-      }
-    }
+    return { token, retUser}
   } catch(err) {
     throw err;
   }
@@ -52,8 +53,9 @@ const createUser = async (username, email, phoneNumber, password) => {
  * @param   {string} username
  * @param   {string} email
  * @param   {string} password
- * @return {object} the encrypted JWT (JSON Web Token) along with the database's user object
+ * @return {object} the encrypted custom authentication token to authenticate a user upon signup along with user information
  */
+/*
 const signupUser = async (name, username, email, password) => {
   try {
     // hash password and insert into database
@@ -65,7 +67,7 @@ const signupUser = async (name, username, email, password) => {
   } catch (err) {
     throw err;
   }
-};
+};*/
 
 /**
  * Takes in an email (soon username) and password and logs in user by checking password hash and generating a token
@@ -261,9 +263,9 @@ const returnUserDetails = async (user, includeProfilePic = false) => {
   try {
     if (includeProfilePic) {
       const profilePic64 = await retrieveProfilePic(user);
-      return {id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance, img: profilePic64};
+      return {id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance, phoneNumber: user.phoneNumber, img: profilePic64};
     } else {
-      return {id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance};
+      return {id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance, phoneNumber: user.phoneNumber};
     }
   } catch (err) {
     throw err;
@@ -280,7 +282,6 @@ module.exports = {
   userWithUsername: userWithUsername,
   updateProfilePic: updateProfilePic,
   retrieveProfilePic: retrieveProfilePic,
-  returnUserDetails: returnUserDetails,
-  createUser: createUser,
+  returnUserDetails: returnUserDetails
 };
 

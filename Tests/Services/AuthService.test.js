@@ -15,9 +15,10 @@ describe('Authentication Service Tests', () => {
     const username = 'testUsername';
     const email = 'test@gmail.com';
     const password = 'password';
+    const phoneNumber = '+15553004404';
     let user;
     before((done) => {
-      AuthService.signupUser(name, username, email, password).then((resp) => {
+      AuthService.signupUser(name, username, email, phoneNumber, password).then((resp) => {
         user = resp.retUser;
         done();
       }).catch((err) => {
@@ -30,6 +31,7 @@ describe('Authentication Service Tests', () => {
       expect(user.username).equals(username);
       expect(user.email).equals(email);
       expect(user.balance).equals(0);
+      expect(user.phoneNumber).equals(phoneNumber);
     });
   });
   after((done) => {

@@ -6,32 +6,17 @@ const AuthService = require('../Services/AuthService');
 const FriendService = require('../Services/FriendService');
 const FireBaseService = require("../Services/FireBaseService");
 const { reset } = require('sinon');
-//test router for singing in a user
+//test router for signing in a user
+/*
 router.post('/createuser', async (req,res) => {
   try{
-      const {token, user} = await AuthService.createUser(req.body.username, req.body.email, req.body.phoneNumber, req.body.password);
-      res.status(200).send({message: "Successfully signed up User!", CustomToken: token, user: user});
+      const {CustomToken, retUser} = await AuthService.createUser(req.body.username, req.body.email, req.body.phoneNumber, req.body.password);
+      res.status(200).send({message: "Successfully signed up User!", token: CustomToken, user: retUser});
   } catch(err){
     console.log(err);
-    res.status(400).send({message: err})
-  }
-});
-//test route to verify the ID token passed in from the client side
-router.get('/uid', async (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if(authHeader != null) {
-      const uid = await FireBaseService.Verify(authHeader);
-      console.log(`uid: ${uid}`);
-      res.status(200).send({uid: uid});
-    } else{
-      res.status(400).send({message: "No authorization header passed in"});
-    }
-
-  } catch(err) {
     res.status(400).send({message: err});
   }
-})
+});*/
 
 router.post('/signup', async (req, res) => {
   try {
@@ -47,8 +32,9 @@ router.post('/signup', async (req, res) => {
     if (userWithUsername) {
       return res.status(403).send({message: 'Username is already in use. Please select another username or sign in'});
     }
-    const {jwt, retUser} = await AuthService.signupUser(req.body.name, req.body.username, req.body.email, req.body.password);
-    return res.status(200).send({message: 'Successfully signed up the user!', token: jwt.token, expiresIn: jwt.expires, user: retUser});
+    //change this area to accomodate phone number
+    const {token, retUser} = await AuthService.signupUser(req.body.name, req.body.username, req.body.email, req.body.phoneNumber, req.body.password);
+    return res.status(200).send({message: 'Successfully signed up the user!', token: token.idToken, expiresIn: token.expiresIn, refreshToken: token.refreshToken, user: retUser});
   } catch (err) {
     return res.status(400).send({message: err.message});
   }

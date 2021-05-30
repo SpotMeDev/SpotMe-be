@@ -9,6 +9,7 @@ const userSchema = mongoose.Schema({
   //removed password field since passwords can be stored in firebase
   email: String,
   balance: Number,
+  phoneNumber: String,
   friends: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Friends',
