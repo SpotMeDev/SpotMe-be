@@ -1,5 +1,6 @@
 const FireBase_Admin = require('firebase-admin');
 const axios = require('axios');
+const User = require('../models/user');
 
 
 /**
@@ -23,13 +24,16 @@ const FireBaseIDtoken = async(email, password) => {
         }
     }
     try {
+        //using FireBase REST API to make a post request to get the user information and ID token
         const response = await axios.post(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_Key}`, 
         data, config = Configuration)
+        console.log(response.data);
         const idToken = 'Bearer ' + response.data.idToken;
         const refreshToken = response.data.refreshToken;
         const expiresIn = response.data.expiresIn;
-        //returning the ID token(JWT token), refreskToken, exipres time
-        return {idToken, refreshToken, expiresIn}
+        const uid = response.data.localId;
+        //returning the ID token(JWT token), refreskToken, exipres time & uid (may change if find no need)
+        return {idToken, refreshToken, expiresIn, uid}
     } catch(err) {
         console.log(err);
         throw err;
@@ -48,15 +52,21 @@ const Authenticate = (req, res, next) => {
     //first getting the authorization header. Seperating bearer and token
     const [Bearer, token] = req.headers.authorization.split(' ');
     if(Bearer == 'Bearer') {
-        console.log(Bearer);
         if(token != null) {
             //using firebase SDK to verify user token and return the user uid
             FireBase_Admin.auth().verifyIdToken(token)
-            .then(user =>{
-                if(user) {
-                    req.user = user.uid;
-                    console.log(user.uid);
-                    next();
+            .then(response =>{
+                if(response) {
+                    User.findOne({_id: response.uid}).then((user) => {
+                        console.log(user);
+                        req.user = user;
+                        next();
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                        req.user = false;
+                        next();
+                    })
                 } else {
                     req.user = false;
                     next();
@@ -74,9 +84,23 @@ const Authenticate = (req, res, next) => {
     }
 };
 
+const UpdatePassword = async(user, newPassword) => {
+    //_id is the uid that needs to be passed in
+    const uid = user._id;
+    try {
+        const userUpdated = await FireBase_Admin.auth().updateUser(uid, {
+            password: newPassword
+        });
+        return userUpdated;
+    } catch(err) {
+        console.log(err)
+        throw err;
+    }
+}
 
 module.exports = {
     FireBaseIDtoken: FireBaseIDtoken,
-    Authenticate: Authenticate
+    Authenticate: Authenticate,
+    UpdatePassword: UpdatePassword
 }
   

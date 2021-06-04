@@ -12,7 +12,7 @@ const FireBaseService = require('./FireBaseService');
  * @param   {string} username
  * @param   {string} email
  * @param   {string} password users passwords will be encrypted and stored in FireBase
- * @param   {string} phoneNumber users phoneNumber will be stored in firebase only for now
+ * @param   {string} phoneNumber users phoneNumber will be stored in firebase only
  * @return {object} the encrypted FireBase authentication token to authenticate a user upon signup along with user information
  */
 const signupUser = async (name, username, email, phoneNumber, password) => {
@@ -37,16 +37,39 @@ const signupUser = async (name, username, email, phoneNumber, password) => {
     console.log("User created in database");
 
     //const CustomToken = await FireBase_Admin.auth().createCustomToken(user.uid);
-    const token =  await FireBaseService.FireBaseIDtoken(email, password);
-    console.log(token);
+    const UserToken =  await FireBaseService.FireBaseIDtoken(email, password);
+    console.log(UserToken);
     const retUser = await returnUserDetails(newUser, true);
     // returning json of JWT token
-    return { token, retUser}
+    return { UserToken, retUser}
   } catch(err) {
     throw err;
   }
 }
-
+/**
+ * Takes in the users email and password and retrives the user's uid and JWT ID token from FireBase
+ * @param   {string} email
+ * @param   {string} password 
+ * @returns {object} the encrypted JWT ID Token along with the database's user object
+ */
+const loginUser = async(email, password) => {
+  try {
+      //retrive token and uid from firebase service 
+      const {uid, idToken, refreshToken, expiresIn} = await FireBaseService.FireBaseIDtoken(email, password);
+      //find user in database by their uid 
+      const user = await User.findOne({_id: uid});
+      console.log(`User found ${user}`);
+      if(user) {
+          const retUser = await returnUserDetails(user, true);
+          return {UserToken: {idToken, refreshToken, expiresIn}, retUser};
+      } else {
+        throw new Error("User not registered, please create an account");
+      }
+  } catch(err) {
+    console.log(err);
+    throw err;
+  }
+}
 /**
  * Takes in necessary profile information and creates a user object in our database.
  * @param   {string} name
@@ -75,7 +98,7 @@ const signupUser = async (name, username, email, password) => {
  * @param   {string} password the second number
  * @returns {object} the encrypted JWT (JSON Web Token) along with the database's user object
  */
-
+/*
 const loginUser = async (email, password) => {
   try {
     const user = await User.findOne({email: email});
@@ -95,9 +118,9 @@ const loginUser = async (email, password) => {
     throw err;
   }
 };
-
+*/
 /**
- * Changes the user's password by updating the database document
+ * Changes the user's password by updating it in FireBase
  * @param   {object} user Current user object that needs password change
  * @param   {string} currentPassword the password that is currently associated with the user
  * @param   {string} newPassword the password string that the user wants to change to
@@ -105,15 +128,15 @@ const loginUser = async (email, password) => {
  */
 
 const changePassword = async (user, currentPassword, newPassword) => {
+  //having a variable before the update to see if the uid match once user password has been updated
+  const currentUser = user._id;
   try {
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (isMatch) {
-      // create a hash of the new password
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      await User.findOneAndUpdate({_id: user._id}, {$set: {password: hashedPassword}}, {new: true});
-      return true;
+    const userUpdated = await FireBaseService.UpdatePassword(user, newPassword);
+    //new variable will have id as uid since came from firebase
+    if (currentUser == userUpdated.uid) {
+        return true;
     } else {
-      throw new Error('Current Password does not match the user');
+      throw new Error('User not found');
     }
   } catch (err) {
     throw err;

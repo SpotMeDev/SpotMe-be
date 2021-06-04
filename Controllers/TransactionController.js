@@ -24,7 +24,7 @@ router.post('/add-balance', passport.authenticate('jwt', {session: false}), asyn
 });
 
 
-router.get('/user-transactions', FireBaseService.Authenticate, async (req, res) => {
+router.get('/user-transactions', passport.authenticate('jwt', {session: false}), async (req, res) => {
   try {
     const user = req.user;
     const transactions = await TransactionService.allUserTransactions(user);

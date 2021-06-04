@@ -33,8 +33,8 @@ router.post('/signup', async (req, res) => {
       return res.status(403).send({message: 'Username is already in use. Please select another username or sign in'});
     }
     //change this area to accomodate phone number
-    const {token, retUser} = await AuthService.signupUser(req.body.name, req.body.username, req.body.email, req.body.phoneNumber, req.body.password);
-    return res.status(200).send({message: 'Successfully signed up the user!', token: token.idToken, expiresIn: token.expiresIn, refreshToken: token.refreshToken, user: retUser});
+    const {UserToken, retUser} = await AuthService.signupUser(req.body.name, req.body.username, req.body.email, req.body.phoneNumber, req.body.password);
+    return res.status(200).send({message: 'Successfully signed up the user!', token: UserToken.idToken, expiresIn: UserToken.expiresIn, refreshToken: UserToken.refreshToken, user: retUser});
   } catch (err) {
     return res.status(400).send({message: err.message});
   }
@@ -43,8 +43,8 @@ router.post('/signup', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
-    const {jwt, retUser} = await AuthService.loginUser(req.body.email, req.body.password);
-    return res.status(200).send({message: 'Successfully logged in the user!', token: jwt.token, expiresIn: jwt.expires, user: retUser});
+    const {UserToken, retUser} = await AuthService.loginUser(req.body.email, req.body.password);
+    return res.status(200).send({message: 'Successfully logged in the user!', token: UserToken.idToken, expiresIn: UserToken.expiresIn,refreshToken: UserToken.refreshToken, user: retUser});
   } catch (err) {
     return res.status(400).send({message: err.message});
   }
@@ -62,7 +62,7 @@ router.post('/change-account', passport.authenticate('jwt', {session: false}), a
 
 
 // route specifically to change password
-router.post('/change-password', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.post('/change-password', FireBaseService.Authenticate, async (req, res) => {
   try {
     const user = req.user;
     if (req.body.currentPassword === '' || req.body.newPassword === '' || req.body.confirmPassword === '') {
