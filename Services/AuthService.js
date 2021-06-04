@@ -58,7 +58,6 @@ const loginUser = async(email, password) => {
       const {uid, idToken, refreshToken, expiresIn} = await FireBaseService.FireBaseIDtoken(email, password);
       //find user in database by their uid 
       const user = await User.findOne({_id: uid});
-      console.log(`User found ${user}`);
       if(user) {
           const retUser = await returnUserDetails(user, true);
           return {UserToken: {idToken, refreshToken, expiresIn}, retUser};
