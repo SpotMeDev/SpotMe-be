@@ -5,7 +5,7 @@ const passport = require('passport');
 const TransactionService = require('../Services/TransactionService');
 const FireBaseService = require("../Services/FireBaseService");
 
-router.post('/send', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.post('/send', FireBaseService.Authenticate, async (req, res) => {
   try {
     const userAfterTransaction = await TransactionService.createTransaction(req.user, req.body.recipientID, req.body.message, req.body.amount);
     return res.status(200).send({message: 'Succesfully created transaction', user: userAfterTransaction});
@@ -14,7 +14,7 @@ router.post('/send', passport.authenticate('jwt', {session: false}), async (req,
   }
 });
 
-router.post('/add-balance', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.post('/add-balance', FireBaseService.Authenticate, async (req, res) => {
   try {
     const updatedUser = await TransactionService.addBalance(req.user, req.body.amount);
     return res.status(200).send({message: 'Successfully updated your balance', user: updatedUser});
@@ -24,7 +24,7 @@ router.post('/add-balance', passport.authenticate('jwt', {session: false}), asyn
 });
 
 
-router.get('/user-transactions', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/user-transactions', FireBaseService.Authenticate, async (req, res) => {
   try {
     const user = req.user;
     const transactions = await TransactionService.allUserTransactions(user);

@@ -6,17 +6,6 @@ const AuthService = require('../Services/AuthService');
 const FriendService = require('../Services/FriendService');
 const FireBaseService = require("../Services/FireBaseService");
 const { reset } = require('sinon');
-//test router for signing in a user
-/*
-router.post('/createuser', async (req,res) => {
-  try{
-      const {CustomToken, retUser} = await AuthService.createUser(req.body.username, req.body.email, req.body.phoneNumber, req.body.password);
-      res.status(200).send({message: "Successfully signed up User!", token: CustomToken, user: retUser});
-  } catch(err){
-    console.log(err);
-    res.status(400).send({message: err});
-  }
-});*/
 
 router.post('/signup', async (req, res) => {
   try {
