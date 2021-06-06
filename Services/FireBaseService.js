@@ -35,8 +35,8 @@ const FireBaseIDtoken = async(email, password) => {
         //returning the ID token(JWT token), refreskToken, exipres time & uid (may change if find no need)
         return {idToken, refreshToken, expiresIn, uid}
     } catch(err) {
-        console.log(err);
-        throw err;
+        //reuturning error message from API request
+        throw err.response.data.error;
     }
 }
 /**
@@ -44,8 +44,8 @@ const FireBaseIDtoken = async(email, password) => {
  * its ID token 
  * @param {*} req get the authorization header from the request
  * @param {*} res if any error return result 400
- * @param {*} next once verified the user return a uid or false if not verified
- * @returns {string} uid
+ * @param {*} next once verified or not verified complete the middleware function
+ * @returns {object} user inofrmation
  * 
  */
 const Authenticate = (req, res, next) => {
@@ -53,12 +53,13 @@ const Authenticate = (req, res, next) => {
     const [Bearer, token] = req.headers.authorization.split(' ');
     if(Bearer == 'Bearer') {
         if(token != null) {
-            //using firebase SDK to verify user token and return the user uid
+            //using firebase SDK to verify user token
             FireBase_Admin.auth().verifyIdToken(token)
             .then(response =>{
                 if(response) {
+                    //find the user in the mongo database then return the user object
                     User.findOne({_id: response.uid}).then((user) => {
-                        console.log(user);
+                        //console.log(user);
                         req.user = user;
                         next();
                     })
@@ -84,23 +85,22 @@ const Authenticate = (req, res, next) => {
     }
 };
 
-const UpdatePassword = async(user, newPassword) => {
+const UpdateUser = async(user, updateObject) => {
     //_id is the uid that needs to be passed in
     const uid = user._id;
     try {
-        const userUpdated = await FireBase_Admin.auth().updateUser(uid, {
-            password: newPassword
-        });
+        const userUpdated = await FireBase_Admin.auth().updateUser(uid,
+            updateObject);
         return userUpdated;
     } catch(err) {
-        console.log(err)
         throw err;
     }
 }
 
+
 module.exports = {
     FireBaseIDtoken: FireBaseIDtoken,
     Authenticate: Authenticate,
-    UpdatePassword: UpdatePassword
+    UpdateUser: UpdateUser
 }
   

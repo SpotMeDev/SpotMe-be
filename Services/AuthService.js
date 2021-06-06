@@ -23,7 +23,7 @@ const signupUser = async (name, username, email, phoneNumber, password) => {
                             emailVerified: false,
                             phoneNumber: phoneNumber,
                             password: password,
-                            displayName: username
+                            displayName: name
                           });
     //store user in the database
     const newUser = await User.create({
@@ -121,21 +121,25 @@ const loginUser = async (email, password) => {
 /**
  * Changes the user's password by updating it in FireBase
  * @param   {object} user Current user object that needs password change
- * @param   {string} currentPassword the password that is currently associated with the user
  * @param   {string} newPassword the password string that the user wants to change to
  * @returns {boolean} boolean indicating whether we have succesffuly changed password
  */
 
-const changePassword = async (user, currentPassword, newPassword) => {
-  //having a variable before the update to see if the uid match once user password has been updated
-  const currentUser = user._id;
+const changePassword = async (user, newPassword) => {
+  const userOld = user;
+  //creating object to pass into FireBase Update API
+  const updateObject = {
+    password: newPassword
+  }
   try {
-    const userUpdated = await FireBaseService.UpdatePassword(user, newPassword);
-    //new variable will have id as uid since came from firebase
-    if (currentUser == userUpdated.uid) {
-        return true;
-    } else {
-      throw new Error('User not found');
+    const user = await FireBaseService.UpdateUser(userOld, updateObject);
+    console.log(user);
+    if (user) {
+      return true;
+    } 
+    //throwing error since no user returned from Firbase API
+    else {
+      throw new Error('User not updated');
     }
   } catch (err) {
     throw err;
@@ -144,37 +148,59 @@ const changePassword = async (user, currentPassword, newPassword) => {
 
 /**
  * Change user account information, either the user's name or username
- * @param   {object} user Current user object that needs password change
+ * @param   {object} user Current user object to update information
  * @param   {string} updateType string that indicates whether we are changing user's name or username
  * @param   {string} updatedField the string that is associated with the new value that we want to change our field to
  * @return {object} returns updated user object
  */
+
 const changeAccount = async (user, updateType, updatedField) => {
-  try {
+  try{
     const type = updateType;
     const newField = updatedField;
-    if (type === 'name') {
-      if (user.name === newField || newField === '') {
-        throw new Error('Please select a new name that is at least 1 character long!');
-      }
-      const updatedUser = await User.findOneAndUpdate({_id: user._id}, {$set: {name: newField}}, {new: true});
-      const retUser = await returnUserDetails(updatedUser, true);
-      return retUser;
-    } else if (type === 'username') {
-      // handle username change here
-      if (user.username === newField || newField === '') {
-        throw new Error('Please select a new username that is at least 1 character long!');
-      }
-      const updatedUser = await User.findOneAndUpdate({_id: user._id}, {$set: {username: newField}}, {new: true});
-      const retUser = await returnUserDetails(updatedUser, true);
-      return retUser;
-    } else {
-      throw new Error('Unable to update account information!');
+    //switch statement to handle conditions for if its name, username or neither
+    switch(type) {
+      //displayname in firebase we have set to name field 
+        case 'name':
+          if (user.name === newField || newField === '') {
+            throw new Error('Please select a new username that is at least 1 character long!');
+          }
+          //updating displayName in firebase by passing in object with displayName field
+          const updateObject = {
+            displayName: newField
+          }
+          const userUpdate = await FireBaseService.UpdateUser(user, updateObject);
+          console.log(userUpdate);
+          
+          //updating in the database and returning user details
+          if(userUpdate) {
+            //have to use uid since FireBase object returns the id as uid
+            const updatedUser = await User.findOneAndUpdate({_id: userUpdate.uid}, {$set: {name: newField}}, {new: true});
+            const retUser = await returnUserDetails(updatedUser, true);
+            return retUser;
+          }
+          //throwing error since no user returned from Firbase API
+          else {
+            throw new Error("User did not update");
+          }
+          //username one only need to update in the database
+        case 'username':
+          if (user.username === newField || newField === '') {
+            throw new Error('Please select a new username that is at least 1 character long!');
+          }
+          const updatedUser = await User.findOneAndUpdate({_id: user._id}, {$set: {username: newField}}, {new: true});
+          const retUser = await returnUserDetails(updatedUser, true);
+          return retUser;
+          //if neither criteria met throw error
+        default:
+          throw new Error('Unable to update account information!');
+
     }
-  } catch (err) {
+  } 
+  catch(err) {
     throw err;
   }
-};
+}
 
 /**
  * Given a search query, return all corresponding users

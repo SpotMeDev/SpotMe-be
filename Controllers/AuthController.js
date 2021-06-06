@@ -51,7 +51,7 @@ router.post('/login', async (req, res) => {
 });
 
 // route specifically for username or name, seperate route for password
-router.post('/change-account', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.post('/change-account', FireBaseService.Authenticate, async (req, res) => {
   try {
     const updatedUser = await AuthService.changeAccount(req.user, req.body.updateType, req.body.updatedField);
     return res.status(200).send({message: 'Succesfully updated the user!', user: updatedUser});
@@ -75,7 +75,7 @@ router.post('/change-password', FireBaseService.Authenticate, async (req, res) =
       return res.status(400).send({message: 'New password must be different from the current password!'});
     }
 
-    const changedPassword = await AuthService.changePassword(user, req.body.currentPassword, req.body.newPassword);
+    const changedPassword = await AuthService.changePassword(user, req.body.newPassword);
     if (changedPassword) {
       return res.status(200).send({message: 'Successfully changed password'});
     } else {
