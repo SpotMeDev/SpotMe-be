@@ -6,6 +6,8 @@ const AuthService = require('../Services/AuthService');
 const FriendService = require('../Services/FriendService');
 const FireBaseService = require("../Services/FireBaseService");
 const { reset } = require('sinon');
+const multer = require('multer');
+const upload = multer();
 
 router.post('/signup', async (req, res) => {
   try {
@@ -75,12 +77,14 @@ router.post('/change-password', FireBaseService.Authenticate, async (req, res) =
   }
 });
 
-
-router.post('/update-profile-pic', passport.authenticate('jwt', {session: false}), async (req, res) => {
+//multer only been used with post man image upload test. pass in upload.single('profileData64') in the middleware
+router.post('/update-profile-pic', FireBaseService.Authenticate, async (req, res) => {
   try {
     const user = req.user;
+    //only for when working with post man
+    //const profileData64 = req.file;
     if (req.body.profileData64) {
-      // do we need this extra ret64 computation if we already have the profileData64?
+      // do we need this extra ret64 computation if we already have the profileData64
       const upload = await AuthService.updateProfilePic(user, req.body.profileData64);
       if (upload) {
         const retUser = await AuthService.returnUserDetails(user, true);
@@ -97,8 +101,9 @@ router.post('/update-profile-pic', passport.authenticate('jwt', {session: false}
   }
 });
 
-router.get('/profile-pic', passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/profile-pic', FireBaseService.Authenticate, async (req, res) => {
   const user = req.user;
+  console.log(user);
   try {
     const profilePic = await AuthService.retrieveProfilePic(user);
     return res.status(200).send({message: 'Retrieved profile pic', profilePic: profilePic});

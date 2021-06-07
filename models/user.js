@@ -11,7 +11,7 @@ const userSchema = mongoose.Schema({
   balance: Number,
   phoneNumber: String,
   friends: [{
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.String,
     ref: 'Friends',
   }],
   profileImg: {type: mongoose.Schema.Types.ObjectId, ref: 'Image'},

@@ -1,7 +1,6 @@
 const User = require('../models/user');
 const Image = require('../models/image');
 const Utils = require('../services/utils');
-const bcrypt = require('bcrypt');
 const TokenService = require('./TokenService');
 const FireBase_Admin = require('firebase-admin');
 const FireBaseService = require('./FireBaseService');
@@ -272,6 +271,7 @@ const userWithUsername = async (username) => {
 
 const updateProfilePic = async (user, data) => {
   try {
+    // only for wjen using multer const buffer = Buffer.from(data.buffer, 'base64');
     const buffer = Buffer.from(data, 'base64');
     const newImage = await Image.create({img: {data: buffer, contentType: 'img/jpeg'}});
     await User.findOneAndUpdate({_id: user._id}, {$set: {profileImg: newImage._id}}, {new: true});
