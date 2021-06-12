@@ -62,7 +62,9 @@ const loginUser = async (email, password) => {
 
 const changePassword = async (user, currentPassword, newPassword) => {
   try {
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    const isMatch = await bcrypt.compare(currentPassword, user.password, (err, result) => {
+      return result;
+    });
     if (isMatch) {
       // create a hash of the new password
       const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -196,6 +198,7 @@ const updateProfilePic = async (user, data) => {
  */
 const retrieveProfilePic = async (user) => {
   try {
+    console.log(user);
     const imgID = user.profileImg;
     // use the object ID to find the correct image document
     const profileImg = await Image.findById(imgID);
@@ -219,9 +222,11 @@ const returnUserDetails = async (user, includeProfilePic = false) => {
   try {
     if (includeProfilePic) {
       const profilePic64 = await retrieveProfilePic(user);
-      return {id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance, img: profilePic64};
+      return {_id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance, img: profilePic64};
     } else {
-      return {id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance};
+      console.log("USER DETAILS");
+      console.log(user);
+      return {_id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance};
     }
   } catch (err) {
     throw err;

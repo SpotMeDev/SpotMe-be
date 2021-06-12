@@ -44,6 +44,8 @@ const friendStatus = async (senderId, recipientId) => {
 const allFriends = async (id) => {
   try {
     const user = await User.findById(id);
+    console.log("ALL FRIENDS")
+    console.log(user);
     if (user) {
       // create a mongo aggregation: NEED TO IMPROVE: TOO MANY QUERIES
       const friends = user.friends;
@@ -80,7 +82,11 @@ const addFriend = async (user, recipientID) => {
   try {
     // get the sender and recipient user obj
     const sender = user;
+    console.log("SENDER");
+    console.log(sender);
     const recipient = await User.findById(recipientID);
+    console.log("RECIP");
+    console.log(recipientID);
 
     // update friend schema to reflect sending
     const senderFriendReq = await Friends.findOneAndUpdate({requester: sender._id, recipient: recipient._id}, {$set: {status: 1}}, {new: true, upsert: true});
@@ -89,7 +95,9 @@ const addFriend = async (user, recipientID) => {
     // update the user objects
     const newSender = await User.findOneAndUpdate({_id: sender._id}, {$push: {friends: senderFriendReq._id}}, {new: true});
     await User.findOneAndUpdate({_id: recipient._id}, {$push: {friends: recipientFriendReq._id}}, {new: true});
-    const retUser = await AuthService.returnUserDetails(newSender, true);
+    const retUser = await AuthService.returnUserDetails(newSender, false);
+    console.log("ADD FRIEND RETURN")
+    console.log(retUser);
     return retUser;
   } catch (err) {
     throw err;
