@@ -67,7 +67,7 @@ const allUserTransactions = async (user) => {
     const ret = [];
     await Promise.all(allTransactions.map(async (transaction) => {
       let userIsSender = false;
-      if (transaction.sender.equals(user._id)) {
+      if (transaction.sender === user._id) {
         const recipient = await User.findById(transaction.recipient);
         const retUser = await AuthService.returnUserDetails(user);
         const retRecipient = await AuthService.returnUserDetails(recipient);

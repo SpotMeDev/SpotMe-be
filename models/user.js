@@ -2,13 +2,16 @@ const mongoose = require('mongoose');
 
 
 const userSchema = mongoose.Schema({
+  //setting the id to Firebase uid
+  _id: String,
   name: String,
   username: String,
+  //removed password field since passwords can be stored in firebase
   email: String,
-  password: String,
   balance: Number,
+  phoneNumber: String,
   friends: [{
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.String,
     ref: 'Friends',
   }],
   profileImg: {type: mongoose.Schema.Types.ObjectId, ref: 'Image'},
