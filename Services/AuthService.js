@@ -1,6 +1,6 @@
 const User = require('../models/user');
 const Image = require('../models/image');
-const Utils = require('../services/utils');
+const Utils = require('../Services/utils');
 const TokenService = require('./TokenService');
 const FireBase_Admin = require('firebase-admin');
 const FireBaseService = require('./FireBaseService');
