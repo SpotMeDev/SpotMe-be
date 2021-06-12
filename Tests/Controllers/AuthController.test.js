@@ -20,7 +20,7 @@ describe('Auth Controllers Tests', () => {
     const password = 'password';
     it('Succesfully signs up', async () => {
       const jwt = {token: '', expires: '1d'};
-      const retUser = {id: '', name: name, username: username, email: email, balance: 0, img: ''};
+      const retUser = {_id: '', name: name, username: username, email: email, balance: 0, img: ''};
       sinon.stub(AuthService, 'userWithEmail').returns(false);
       sinon.stub(AuthService, 'userWithUsername').returns(false);
       sinon.stub(AuthService, 'signupUser').returns({jwt: jwt, retUser: retUser});
@@ -33,22 +33,22 @@ describe('Auth Controllers Tests', () => {
     it('Password and Confirm Password are not equal', async () => {
       const res = await chai.request(app).post('/auth/signup').send({name: name, username: username, email: email, password: password, confirmPassword: '123'});
       expect(res.status).to.equal(400);
-      expect(res.body.message).to.equal('Your passsword and confirm password must match');
+      expect(res.body.message).to.equal('Invalid input! Please provide a proper input and try again');
     });
     it('Empty Password', async () => {
       const res = await chai.request(app).post('/auth/signup').send({name: name, username: username, email: email, password: '', confirmPassword: password});
       expect(res.status).to.equal(400);
-      expect(res.body.message).to.equal('Your passsword and confirm password must match');
+      expect(res.body.message).to.equal('Invalid input! Please provide a proper input and try again');
     });
     it('Empty Confirm Password', async () => {
       const res = await chai.request(app).post('/auth/signup').send({name: name, username: username, email: email, password: password, confirmPassword: ''});
       expect(res.status).to.equal(400);
-      expect(res.body.message).to.equal('Your passsword and confirm password must match');
+      expect(res.body.message).to.equal('Invalid input! Please provide a proper input and try again');
     });
     it('Both password and confirm password empty', async () => {
       const res = await chai.request(app).post('/auth/signup').send({name: name, username: username, email: email, password: '', confirmPassword: ''});
       expect(res.status).to.equal(400);
-      expect(res.body.message).to.equal('Your passsword and confirm password must match');
+      expect(res.body.message).to.equal('Invalid input! Please provide a proper input and try again');
     });
     it('User with email already exists', async () => {
       sinon.stub(AuthService, 'userWithEmail').returns(true);
@@ -57,6 +57,7 @@ describe('Auth Controllers Tests', () => {
       expect(res.body.message).to.equal('Email is already in use. Please use another email address or sign in');
     });
     it('User with username already exists', async () => {
+      sinon.stub(AuthService, 'userWithEmail').returns(false);
       sinon.stub(AuthService, 'userWithUsername').returns(true);
       const res = await chai.request(app).post('/auth/signup').send({name: name, username: username, email: email, password: password, confirmPassword: password});
       expect(res.status).to.equal(403);
@@ -64,7 +65,7 @@ describe('Auth Controllers Tests', () => {
     });
     it('Error thrown', async () => {
       const errorMessage = 'Failed to signup';
-      sinon.stub(AuthService, 'userWithEmail').throws({message: errorMessage});
+      sinon.stub(AuthService, 'signupUser').throws({message: errorMessage});
       const res = await chai.request(app).post('/auth/signup').send({name: name, username: username, email: email, password: password, confirmPassword: password});
       expect(res.status).to.equal(400);
       expect(res.body.message).to.equal(errorMessage);
@@ -77,7 +78,7 @@ describe('Auth Controllers Tests', () => {
     const password = 'password';
     it('Successful login', async () => {
       const jwt = {token: '', expires: '1d'};
-      const retUser = {id: '', name: name, username: username, email: email, balance: 0, img: ''};
+      const retUser = {_id: '', name: name, username: username, email: email, balance: 0, img: ''};
       sinon.stub(AuthService, 'loginUser').returns({jwt: jwt, retUser: retUser});
       const res = await chai.request(app).post('/auth/login').send({email: email, password: password});
       expect(res.status).to.equal(200);
@@ -85,6 +86,12 @@ describe('Auth Controllers Tests', () => {
       expect(res.body.user).to.eql(retUser);
       expect(res.body.expiresIn).equals(jwt.expires);
       expect(res.body.token).to.eql(jwt.token);
+    });
+    it('Invalid input', async () => {
+      const errorMessage = 'Invalid input! Please provide a proper input and try again';
+      const res = await chai.request(app).post('/auth/login').send({});
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal(errorMessage);
     });
     it('Error thrown', async () => {
       const errorMessage = 'Failed to login';
@@ -99,12 +106,18 @@ describe('Auth Controllers Tests', () => {
     const updateType = 'username';
     const updatedField = 'newUsername';
     it('Successfully changed account information', async () => {
-      const retUser = {id: '', name: '', username: '', email: '', balance: 0, img: ''};
+      const retUser = {_id: '', name: '', username: '', email: '', balance: 0, img: ''};
       sinon.stub(AuthService, 'changeAccount').returns(retUser);
       const res = await chai.request(app).post('/auth/change-account').send({updateType: updateType, updatedField: updatedField});
       expect(res.status).to.equal(200);
       expect(res.body.message).to.equal('Succesfully updated the user!');
       expect(res.body.user).to.eql(retUser);
+    });
+    it('Invalid input', async () => {
+      const errorMessage = 'Invalid input! Please provide a proper input and try again';
+      const res = await chai.request(app).post('/auth/change-account').send({});
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal(errorMessage);
     });
     it('Error thrown', async () => {
       const errorMessage = 'Failed to change account information';
@@ -117,6 +130,7 @@ describe('Auth Controllers Tests', () => {
   describe('Change Password Tests', () => {
     const password = 'password';
     const newPassword = 'newPassword';
+    const errorMessage = 'Invalid input! Please provide a proper input and try again';
     it('Successfully Changed Password', async () => {
       sinon.stub(AuthService, 'changePassword').returns(true);
       const res = await chai.request(app).post('/auth/change-password').send({currentPassword: password, newPassword: newPassword, confirmPassword: newPassword});
@@ -126,17 +140,17 @@ describe('Auth Controllers Tests', () => {
     it('Empty Passwords', async () => {
       const res = await chai.request(app).post('/auth/change-password').send({currentPassword: '', newPassword: '', confirmPassword: ''});
       expect(res.status).to.equal(400);
-      expect(res.body.message).to.equal('Passwords can\'t be empty');
+      expect(res.body.message).to.equal(errorMessage);
     });
     it('New Password and Confirm Password don\'t match', async () => {
       const res = await chai.request(app).post('/auth/change-password').send({currentPassword: password, newPassword: newPassword, confirmPassword: 'not the same'});
       expect(res.status).to.equal(400);
-      expect(res.body.message).to.equal('New Password and Confirm Password must match');
+      expect(res.body.message).to.equal(errorMessage);
     });
     it('New password not different from current password', async () => {
       const res = await chai.request(app).post('/auth/change-password').send({currentPassword: password, newPassword: password, confirmPassword: password});
       expect(res.status).to.equal(400);
-      expect(res.body.message).to.equal('New password must be different from the current password!');
+      expect(res.body.message).to.equal(errorMessage);
     });
     it('Couldn\'t change password', async () => {
       sinon.stub(AuthService, 'changePassword').returns(false);
@@ -155,7 +169,7 @@ describe('Auth Controllers Tests', () => {
   describe('Update Profile Picture Route', () => {
     const profileData64 = 'testData';
     it('Successfully update profile picture', async () => {
-      const retUser = {id: '', name: '', username: '', email: '', balance: 0, img: ''};
+      const retUser = {_id: '', name: '', username: '', email: '', balance: 0, img: ''};
       sinon.stub(AuthService, 'updateProfilePic').returns(true);
       sinon.stub(AuthService, 'returnUserDetails').returns(retUser);
       const res = await chai.request(app).post('/auth/update-profile-pic').send({profileData64: profileData64});
@@ -166,7 +180,7 @@ describe('Auth Controllers Tests', () => {
     it('No valid base 64 profile data', async () => {
       const res = await chai.request(app).post('/auth/update-profile-pic').send({profileData64: ''});
       expect(res.status).to.equal(400);
-      expect(res.body.message).to.equal('Must include valid profile picture');
+      expect(res.body.message).to.equal('Invalid input! Please provide a proper input and try again');
     });
     it('Unable to upload profile picture', async () => {
       sinon.stub(AuthService, 'updateProfilePic').returns(false);
@@ -207,6 +221,12 @@ describe('Auth Controllers Tests', () => {
       expect(res.body.message).to.equal('Successfully retrieved all users with the query');
       expect(res.body.users).to.eql([]);
     });
+    it('No Query', async () => {
+      const errorMessage = 'Invalid input! Please provide a proper input and try again';
+      const res = await chai.request(app).get('/auth/search-query').query({query: ''});
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal(errorMessage);
+    });
     it('Error thrown', async () => {
       const errorMessage = 'Failed to retrieve all users with the query';
       sinon.stub(AuthService, 'searchUsers').throws({message: errorMessage});
@@ -224,6 +244,20 @@ describe('Auth Controllers Tests', () => {
       expect(res.body.message).to.equal('Sucessfully determined friend status');
       expect(res.body.status).to.equal(1);
     });
+    it('Empty Friend ID', async () => {
+      const errorMessage = 'Invalid input! Please provide a proper input and try again';
+      sinon.stub(FriendService, 'friendStatus').throws({message: errorMessage});
+      const res = await chai.request(app).get('/auth/is-friend').query({rID: ''});
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal(errorMessage);
+    });
+    it('Undefined Friend ID', async () => {
+      const errorMessage = 'Invalid input! Please provide a proper input and try again';
+      sinon.stub(FriendService, 'friendStatus').throws({message: errorMessage});
+      const res = await chai.request(app).get('/auth/is-friend');
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal(errorMessage);
+    });
     it('Error thrown', async () => {
       const errorMessage = 'Failed to determine friend status';
       sinon.stub(FriendService, 'friendStatus').throws({message: errorMessage});
@@ -240,6 +274,20 @@ describe('Auth Controllers Tests', () => {
       expect(res.status).to.equal(200);
       expect(res.body.message).to.equal('Successfully found all the friends of the user');
       expect(res.body.friends).to.eql([]);
+    });
+    it('Empty ID', async () => {
+      const errorMessage = 'Invalid input! Please provide a proper input and try again';
+      sinon.stub(FriendService, 'allFriends').throws({message: errorMessage});
+      const res = await chai.request(app).get('/auth/all-friends').query({id: ''});
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal(errorMessage);
+    });
+    it('Undefined ID', async () => {
+      const errorMessage = 'Invalid input! Please provide a proper input and try again';
+      sinon.stub(FriendService, 'allFriends').throws({message: errorMessage});
+      const res = await chai.request(app).get('/auth/all-friends');
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal(errorMessage);
     });
     it('Error thrown', async () => {
       const errorMessage = 'Failed to retrieve all friends';
@@ -259,6 +307,20 @@ describe('Auth Controllers Tests', () => {
       expect(res.body.message).to.equal('Successfully sent friend request!');
       expect(res.body.user).to.eql(retUser);
     });
+    it('No ID', async () => {
+      const errorMessage = 'Invalid input! Please provide a proper input and try again';
+      sinon.stub(FriendService, 'addFriend').throws({message: errorMessage});
+      const res = await chai.request(app).post('/auth/add-friend').send({recipientID: recipientID});
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal(errorMessage);
+    });
+    it('Undefined ID', async () => {
+      const errorMessage = 'Invalid input! Please provide a proper input and try again';
+      sinon.stub(FriendService, 'addFriend').throws({message: errorMessage});
+      const res = await chai.request(app).post('/auth/add-friend').send({recipientID: recipientID});
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal(errorMessage);
+    });
     it('Error thrown', async () => {
       const errorMessage = 'Failed to add friend';
       sinon.stub(FriendService, 'addFriend').throws({message: errorMessage});
@@ -277,6 +339,20 @@ describe('Auth Controllers Tests', () => {
       expect(res.status).to.equal(200);
       expect(res.body.message).to.equal('Successfully handled friend request');
       expect(res.body.user).to.eql(retUser);
+    });
+    it('Empty Parameters', async () => {
+      const errorMessage = 'Invalid input! Please provide a proper input and try again';
+      sinon.stub(FriendService, 'handleFriendRequest').throws({message: errorMessage});
+      const res = await chai.request(app).post('/auth/handle-friend-request').send({recipientID: '', acceptedRequest: ''});
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal(errorMessage);
+    });
+    it('Undefined Parameters', async () => {
+      const errorMessage = 'Invalid input! Please provide a proper input and try again';
+      sinon.stub(FriendService, 'handleFriendRequest').throws({message: errorMessage});
+      const res = await chai.request(app).post('/auth/handle-friend-request');
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal(errorMessage);
     });
     it('Error thrown', async () => {
       const errorMessage = 'Failed to handle friend request';

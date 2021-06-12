@@ -311,9 +311,9 @@ const returnUserDetails = async (user, includeProfilePic = false) => {
   try {
     if (includeProfilePic) {
       const profilePic64 = await retrieveProfilePic(user);
-      return {id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance, phoneNumber: user.phoneNumber, img: profilePic64};
+      return {_id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance, phoneNumber: user.phoneNumber, img: profilePic64};
     } else {
-      return {id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance, phoneNumber: user.phoneNumber};
+      return {_id: user._id, name: user.name, username: user.username, email: user.email, balance: user.balance, phoneNumber: user.phoneNumber};
     }
   } catch (err) {
     throw err;
