@@ -4,12 +4,9 @@ if (process.env.NODE_ENV !== 'production') {
 //development branch
 const express = require('express');
 const app = express();
-const bodyParser = require('body-parser');
 const port = process.env.PORT || 8080;
 const authRouter = require('./Controllers/AuthController');
 const transactionRouter = require('./Controllers/TransactionController');
-const passport = require('passport');
-const TokenService = require('./Services/TokenService');
 const mongoose = require('mongoose');
 
 // Connect Database
@@ -24,13 +21,8 @@ FireBase_Admin.initializeApp({
   credential: FireBase_Admin.credential.cert(FireBase_Credentials)
 })
 // Body parser
-app.use(bodyParser.json({limit: '50mb'}));
-app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
-
-// Passport middleware
-TokenService.initialize(passport);
-app.use(passport.initialize());
-app.use(passport.session());
+app.use(express.json({limit: '50mb'}));
+app.use(express.urlencoded({limit: '50mb', extended: true}));
 
 // Routes
 app.use('/auth', authRouter);
