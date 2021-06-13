@@ -47,3 +47,4 @@ Look through the assigned GitHub issues / Trello cards for specific tasks or rea
 Format your local branches with "YOURNAME-FEATURENAME-ISSUENUMBER". For example, if I fixed the 217th GitHub issue which was a bug in the auth controller my local branch should be named, "gagankang-authControllerBug-217"
 
 
+test
