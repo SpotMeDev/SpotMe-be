@@ -4,16 +4,16 @@ const router = express.Router();
 const passport = require('passport');
 const AuthService = require('../Services/AuthService');
 const FriendService = require('../Services/FriendService');
-const FireBaseService = require("../Services/FireBaseService");
-const { reset } = require('sinon');
+const FireBaseService = require('../Services/FireBaseService');
+const {reset} = require('sinon');
 const multer = require('multer');
 const upload = multer();
 const AuthMiddleware = require('../Middleware/authMiddleware');
 
 router.post('/signup', AuthMiddleware.validateSignup, async (req, res) => {
   try {
-    const {jwt, retUser} = await AuthService.signupUser(req.body.name, req.body.username, req.body.email, req.body.password);
-    return res.status(200).send({message: 'Successfully signed up the user!', token: jwt.token, expiresIn: jwt.expires, user: retUser});
+    const {UserToken, retUser} = await AuthService.signupUser(req.body.name, req.body.username, req.body.email, req.body.phoneNumber, req.body.password);
+    return res.status(200).send({message: 'Successfully signed up the user!', token: UserToken.idToken, expiresIn: UserToken.expiresIn, refreshToken: UserToken.refreshToken, user: retUser});
   } catch (err) {
     return res.status(400).send({message: err.message});
   }
@@ -23,7 +23,7 @@ router.post('/signup', AuthMiddleware.validateSignup, async (req, res) => {
 router.post('/login', AuthMiddleware.validateLogin, async (req, res) => {
   try {
     const {UserToken, retUser} = await AuthService.loginUser(req.body.email, req.body.password);
-    return res.status(200).send({message: 'Successfully logged in the user!', token: UserToken.idToken, expiresIn: UserToken.expiresIn,refreshToken: UserToken.refreshToken, user: retUser});
+    return res.status(200).send({message: 'Successfully logged in the user!', token: UserToken.idToken, expiresIn: UserToken.expiresIn, refreshToken: UserToken.refreshToken, user: retUser});
   } catch (err) {
     return res.status(400).send({message: err.message});
   }
@@ -55,12 +55,12 @@ router.post('/change-password', AuthMiddleware.validateChangePassword, FireBaseS
   }
 });
 
-//multer only been used with post man image upload test. pass in upload.single('profileData64') in the middleware
-router.post('/update-profile-pic',  AuthMiddleware.validateUpdateProfilePicture, FireBaseService.Authenticate, async (req, res) => {
+// multer only been used with post man image upload test. pass in upload.single('profileData64') in the middleware
+router.post('/update-profile-pic', AuthMiddleware.validateUpdateProfilePicture, FireBaseService.Authenticate, async (req, res) => {
   try {
     const user = req.user;
-    //only for when working with post man
-    //const profileData64 = req.file;
+    // only for when working with post man
+    // const profileData64 = req.file;
     if (req.body.profileData64) {
       // do we need this extra ret64 computation if we already have the profileData64
       const upload = await AuthService.updateProfilePic(user, req.body.profileData64);
@@ -92,7 +92,7 @@ router.get('/profile-pic', FireBaseService.Authenticate, async (req, res) => {
 });
 
 
-router.get('/search-query', AuthMiddleware.validateSearchQuery, passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/search-query', AuthMiddleware.validateSearchQuery, FireBaseService.Authenticate, async (req, res) => {
   try {
     const ret = await AuthService.searchUsers(req.query.query);
     return res.status(200).send({message: 'Successfully retrieved all users with the query', users: ret});
@@ -101,7 +101,7 @@ router.get('/search-query', AuthMiddleware.validateSearchQuery, passport.authent
   }
 });
 
-router.get('/is-friend', AuthMiddleware.validateIsFriend, passport.authenticate('jwt', {session: false}), async (req, res) => {
+router.get('/is-friend', AuthMiddleware.validateIsFriend, FireBaseService.Authenticate, async (req, res) => {
   try {
     const sender = req.user;
     const friendStatus = await FriendService.friendStatus(sender._id, req.query.rID);

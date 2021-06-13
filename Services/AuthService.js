@@ -1,7 +1,7 @@
+/* eslint-disable brace-style */
 const User = require('../models/user');
 const Image = require('../models/image');
 const Utils = require('../Services/utils');
-const TokenService = require('./TokenService');
 const FireBase_Admin = require('firebase-admin');
 const FireBaseService = require('./FireBaseService');
 /**
@@ -16,107 +16,55 @@ const FireBaseService = require('./FireBaseService');
  */
 const signupUser = async (name, username, email, phoneNumber, password) => {
   try {
-    let user =  await FireBase_Admin.auth()
-                          .createUser({
-                            email: email,
-                            emailVerified: false,
-                            phoneNumber: phoneNumber,
-                            password: password,
-                            displayName: name
-                          });
-    //store user in the database
+    const user = await FireBase_Admin.auth()
+        .createUser({
+          email: email,
+          emailVerified: false,
+          phoneNumber: phoneNumber,
+          password: password,
+          displayName: name,
+        });
+    // store user in the database
     const newUser = await User.create({
       _id: user.uid,
       name: name,
       username: username,
       email: email,
       phoneNumber: phoneNumber,
-      balance: 0
+      balance: 0,
     });
-    console.log("User created in database");
 
-    //const CustomToken = await FireBase_Admin.auth().createCustomToken(user.uid);
-    const UserToken =  await FireBaseService.FireBaseIDtoken(email, password);
-    console.log(UserToken);
+    // const CustomToken = await FireBase_Admin.auth().createCustomToken(user.uid);
+    const UserToken = await FireBaseService.FireBaseIDtoken(email, password);
     const retUser = await returnUserDetails(newUser, true);
     // returning json of JWT token
-    return { UserToken, retUser}
-  } catch(err) {
-    throw err;
-  }
-}
-/**
- * Takes in the users email and password and retrives the user's uid and JWT ID token from FireBase
- * @param   {string} email
- * @param   {string} password 
- * @returns {object} the encrypted JWT ID Token along with the database's user object
- */
-const loginUser = async(email, password) => {
-  try {
-      //retrive token and uid from firebase service 
-      const {uid, idToken, refreshToken, expiresIn} = await FireBaseService.FireBaseIDtoken(email, password);
-      //find user in database by their uid 
-      const user = await User.findOne({_id: uid});
-      if(user) {
-          const retUser = await returnUserDetails(user, true);
-          return {UserToken: {idToken, refreshToken, expiresIn}, retUser};
-      } else {
-        throw new Error("User not registered, please create an account");
-      }
-  } catch(err) {
-    console.log(err);
-    throw err;
-  }
-}
-/**
- * Takes in necessary profile information and creates a user object in our database.
- * @param   {string} name
- * @param   {string} username
- * @param   {string} email
- * @param   {string} password
- * @return {object} the encrypted custom authentication token to authenticate a user upon signup along with user information
- */
-/*
-const signupUser = async (name, username, email, password) => {
-  try {
-    // hash password and insert into database
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({name: name, username: username, email: email, password: hashedPassword, balance: 0});
-    const jwt = TokenService.issueJWT(newUser);
-    const retUser = await returnUserDetails(newUser, true);
-    return {jwt, retUser};
+    return {UserToken, retUser};
   } catch (err) {
     throw err;
   }
-};*/
-
+};
 /**
- * Takes in an email (soon username) and password and logs in user by checking password hash and generating a token
+ * Takes in the users email and password and retrives the user's uid and JWT ID token from FireBase
  * @param   {string} email
- * @param   {string} password the second number
- * @returns {object} the encrypted JWT (JSON Web Token) along with the database's user object
+ * @param   {string} password
+ * @return {object} the encrypted JWT ID Token along with the database's user object
  */
-/*
 const loginUser = async (email, password) => {
   try {
-    const user = await User.findOne({email: email});
+    // retrive token and uid from firebase service
+    const {uid, idToken, refreshToken, expiresIn} = await FireBaseService.FireBaseIDtoken(email, password);
+    // find user in database by their uid
+    const user = await User.findOne({_id: uid});
     if (user) {
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (isMatch) {
-        const jwt = TokenService.issueJWT(user);
-        const retUser = await returnUserDetails(user, true);
-        return {jwt, retUser};
-      } else {
-        throw new Error('Incorrect username or password! Please try again.');
-      }
+      const retUser = await returnUserDetails(user, true);
+      return {UserToken: {idToken, refreshToken, expiresIn}, retUser};
     } else {
-      throw new Error('Incorrect username or password! Please try again.');
+      throw new Error('User not registered, please create an account');
     }
   } catch (err) {
     throw err;
   }
 };
-*/
 /**
  * Changes the user's password by updating it in FireBase
  * @param   {object} user Current user object that needs password change
@@ -126,17 +74,17 @@ const loginUser = async (email, password) => {
 
 const changePassword = async (user, newPassword) => {
   const userOld = user;
-  //creating object to pass into FireBase Update API
+  // creating object to pass into FireBase Update API
   const updateObject = {
-    password: newPassword
-  }
+    password: newPassword,
+  };
   try {
     const user = await FireBaseService.UpdateUser(userOld, updateObject);
-    console.log(user);
     if (user) {
       return true;
-    } 
-    //throwing error since no user returned from Firbase API
+    // eslint-disable-next-line brace-style
+    }
+    // throwing error since no user returned from Firbase API
     else {
       throw new Error('User not updated');
     }
@@ -154,52 +102,50 @@ const changePassword = async (user, newPassword) => {
  */
 
 const changeAccount = async (user, updateType, updatedField) => {
-  try{
+  try {
     const type = updateType;
     const newField = updatedField;
-    //switch statement to handle conditions for if its name, username or neither
-    switch(type) {
-      //displayname in firebase we have set to name field 
-        case 'name':
-          if (user.name === newField || newField === '') {
-            throw new Error('Please select a new username that is at least 1 character long!');
-          }
-          //updating displayName in firebase by passing in object with displayName field
-          const updateObject = {
-            displayName: newField
-          }
-          const userUpdate = await FireBaseService.UpdateUser(user, updateObject);
-          console.log(userUpdate);
-          
-          //updating in the database and returning user details
-          if(userUpdate) {
-            //have to use uid since FireBase object returns the id as uid
-            const updatedUser = await User.findOneAndUpdate({_id: userUpdate.uid}, {$set: {name: newField}}, {new: true});
-            const retUser = await returnUserDetails(updatedUser, true);
-            return retUser;
-          }
-          //throwing error since no user returned from Firbase API
-          else {
-            throw new Error("User did not update");
-          }
-          //username one only need to update in the database
-        case 'username':
-          if (user.username === newField || newField === '') {
-            throw new Error('Please select a new username that is at least 1 character long!');
-          }
-          const updatedUser = await User.findOneAndUpdate({_id: user._id}, {$set: {username: newField}}, {new: true});
+    // switch statement to handle conditions for if its name, username or neither
+    switch (type) {
+      // displayname in firebase we have set to name field
+      case 'name':
+        if (user.name === newField || newField === '') {
+          throw new Error('Please select a new username that is at least 1 character long!');
+        }
+        // updating displayName in firebase by passing in object with displayName field
+        const updateObject = {
+          displayName: newField,
+        };
+        const userUpdate = await FireBaseService.UpdateUser(user, updateObject);
+        console.log(userUpdate);
+
+        // updating in the database and returning user details
+        if (userUpdate) {
+          // have to use uid since FireBase object returns the id as uid
+          const updatedUser = await User.findOneAndUpdate({_id: userUpdate.uid}, {$set: {name: newField}}, {new: true});
           const retUser = await returnUserDetails(updatedUser, true);
           return retUser;
-          //if neither criteria met throw error
-        default:
-          throw new Error('Unable to update account information!');
-
+        }
+        // throwing error since no user returned from Firbase API
+        else {
+          throw new Error('User did not update');
+        }
+        // username one only need to update in the database
+      case 'username':
+        if (user.username === newField || newField === '') {
+          throw new Error('Please select a new username that is at least 1 character long!');
+        }
+        const updatedUser = await User.findOneAndUpdate({_id: user._id}, {$set: {username: newField}}, {new: true});
+        const retUser = await returnUserDetails(updatedUser, true);
+        return retUser;
+        // if neither criteria met throw error
+      default:
+        throw new Error('Unable to update account information!');
     }
-  } 
-  catch(err) {
+  } catch (err) {
     throw err;
   }
-}
+};
 
 /**
  * Given a search query, return all corresponding users
@@ -331,6 +277,6 @@ module.exports = {
   userWithUsername: userWithUsername,
   updateProfilePic: updateProfilePic,
   retrieveProfilePic: retrieveProfilePic,
-  returnUserDetails: returnUserDetails
+  returnUserDetails: returnUserDetails,
 };
 
