@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/gkang2018/SpotMe-be#readme",
   "dependencies": {
+    "@firebase/testing": "^0.20.11",
     "axios": "^0.21.1",
     "bcrypt": "^5.0.0",
     "chai": "^4.3.4",
@@ -26,6 +27,7 @@
     "express": "^4.17.1",
     "express-session": "^1.17.1",
     "firebase-admin": "^9.9.0",
+    "firebase-tools": "^9.13.0",
     "jsonwebtoken": "^8.5.1",
     "mocha": "^8.3.2",
     "mongoose": "^5.9.24",

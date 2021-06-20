@@ -3,14 +3,19 @@ const sinon = require('sinon');
 const expect = chai.expect;
 const AuthService = require('../../Services/AuthService');
 const mongoose = require('mongoose');
-const { update } = require('../../models/user');
-const { response } = require('express');
+const {update} = require('../../models/user');
+const {response} = require('express');
+const firebase = require('@firebase/testing');
 
+// project ID for Nod Firebase project
+const FireBase_Project_ID = 'nodpay-5f5f1';
 
 describe('Authentication Service Tests', () => {
-  // before function runs before each test and should be used to set up database connections and async requests
+  // before function runs before each test and should be used to set up database connections and async requests.
+  // set up the firebase emulator
   before((done) => {
     mongoose.connect('mongodb://localhost:27017/spotme-test', {useNewUrlParser: true});
+    const fb = firebase.initializeAdminApp({projectId: FireBase_Project_ID}).auth();
     done();
   });
   describe('Successful Signup Tests', () => {
@@ -58,7 +63,7 @@ describe('Authentication Service Tests', () => {
   describe('Change Account Name', () => {
     const email = 'test@gmail.com';
     const password = 'password';
-    const newName = "Tester";
+    const newName = 'Tester';
     let user;
     let updatedUser;
     before((done) => {
@@ -78,9 +83,8 @@ describe('Authentication Service Tests', () => {
       }).catch((err) => {
         done(err);
       });
-      
     });
-    
+
     it('Successful Account Name Change', async () => {
       expect(user.email).equals(email);
       expect(updatedUser.retUser.name).equals(newName);
@@ -91,7 +95,7 @@ describe('Authentication Service Tests', () => {
   describe('Change Account Username', () => {
     const email = 'test@gmail.com';
     const password = 'password';
-    const newUsername = "Tester";
+    const newUsername = 'Tester';
     let user;
     let updatedUser;
     before((done) => {
@@ -111,9 +115,8 @@ describe('Authentication Service Tests', () => {
         console.log(err);
         done(err);
       });
-      
     });
-    
+
     it('Successful Account Name Change', async () => {
       expect(updatedUser.retUser.username).equals(newUsername);
     });
@@ -129,8 +132,8 @@ describe('Authentication Service Tests', () => {
       }).catch((error) => {
         console.log(error);
         done(error);
-      })
-    })
+      });
+    });
 
     it('User With Email', async () => {
       expect(ret).equals(true);
@@ -147,15 +150,15 @@ describe('Authentication Service Tests', () => {
       }).catch((error) => {
         console.log(error);
         done(error);
-      })
-    })
+      });
+    });
 
     it('User With Username Success', async () => {
       expect(ret).equals(true);
     });
   });
 
-  // search user test 
+  // search user test
   describe('Search Users', () => {
     const username = 'testUsername';
     let ret;
@@ -167,19 +170,19 @@ describe('Authentication Service Tests', () => {
         console.log(error);
         done(error);
       });
-    })
+    });
 
     it('Search Users Successful', async () => {
-       ret.forEach((item) => {
-        expect(item.name).equals("test");
-        expect(item.username).equals("testUsername");
-        expect(item.email).equals("test@gmail.com");
-       });
+      ret.forEach((item) => {
+        expect(item.name).equals('test');
+        expect(item.username).equals('testUsername');
+        expect(item.email).equals('test@gmail.com');
+      });
     });
   });
 
-   // change password TODO
-   describe('Change Password', () => {
+  // change password TODO
+  describe('Change Password', () => {
     const email = 'test@gmail.com';
     const password = 'password';
     const newPassword = 'password1';
@@ -192,8 +195,8 @@ describe('Authentication Service Tests', () => {
       }).catch((error) => {
         console.log(error);
         done(error);
-      })
-    })
+      });
+    });
 
     before((done) => {
       AuthService.changePassword(user, password, newPassword).then((response) => {
@@ -202,8 +205,8 @@ describe('Authentication Service Tests', () => {
       }).catch((error) => {
         console.log(error);
         done(error);
-      })
-    })
+      });
+    });
     it('Successful Change Password', async () => {
       expect(changedPassword).equals(true);
     });
