@@ -1,7 +1,7 @@
 const FireBase_Admin = require('firebase-admin');
 const axios = require('axios');
 const User = require('../models/user');
-
+const API_Key = process.env.Firebase_APIKey;
 
 /**
  * Using FireBase HTTP API to sign in user and retrive the ID token along with the refresh token
@@ -11,8 +11,7 @@ const User = require('../models/user');
  */
 const FireBaseIDtoken = async (email, password) => {
   // will store this later in environment variables
-  const API_Key = 'AIzaSyDaZLrCamN89yUaM9g1tjn7BDdxsUDKWB8';
-  const data = {
+  const payload = {
     email: email,
     password: password,
     returnSecureToken: true,
@@ -26,7 +25,7 @@ const FireBaseIDtoken = async (email, password) => {
   try {
     // using FireBase REST API to make a post request to get the user information and ID token
     const response = await axios.post(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_Key}`,
-        data, config = Configuration);
+        payload, config = Configuration);
     const idToken = 'Bearer ' + response.data.idToken;
     const refreshToken = response.data.refreshToken;
     const expiresIn = response.data.expiresIn;
@@ -36,6 +35,38 @@ const FireBaseIDtoken = async (email, password) => {
   } catch (err) {
     // reuturning error message from API request
     throw err.response.data.error;
+  }
+};
+
+/**
+ * This is to get a Firebase verification token by exchanging through custom token
+ * This method is helpful for getting a verification token without the need of email & password
+ * @param {String} uid
+ * @return {object} jwt token, refresh token and times to expire
+ */
+const CustomToIDToken = async (uid) => {
+  // retrieving a custom token
+  try {
+    const customToken = await FireBase_Admin.auth().createCustomToken(uid);
+    const payload = {
+      token: customToken,
+      returnSecureToken: true,
+    };
+    // making sure it returns as json format
+    const Configuration = {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+    const response = await axios.post(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${API_Key}`,
+        payload, config = Configuration);
+    const idToken = 'Bearer ' + response.data.idToken;
+    const refreshToken = response.data.refreshToken;
+    const expiresIn = response.data.expiresIn;
+    return {idToken, refreshToken, expiresIn};
+  } catch (err) {
+    console.log(err.response.data.error);
+    throw err;
   }
 };
 /**
@@ -81,6 +112,14 @@ const Authenticate = (req, res, next) => {
     return res.status(403).send({message: 'No Bearer in ID token'});
   }
 };
+/**
+ * User make changes to their information (email, password, username, name)
+ * This is to make the changes in Firebase
+ * @param {object} user user that is updating their account info
+ * @param {object} updateObject a JSON object that has the properties and value to make the change
+ * @returns {object} user object from Firebase with the updated information
+ *
+ */
 
 const UpdateUser = async (user, updateObject) => {
   // _id is the uid that needs to be passed in
@@ -99,4 +138,5 @@ module.exports = {
   FireBaseIDtoken: FireBaseIDtoken,
   Authenticate: Authenticate,
   UpdateUser: UpdateUser,
+  CustomToIDToken: CustomToIDToken,
 };

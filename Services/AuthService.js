@@ -4,6 +4,7 @@ const Image = require('../models/image');
 const Utils = require('../Services/utils');
 const FireBase_Admin = require('firebase-admin');
 const FireBaseService = require('./FireBaseService');
+const {auth} = require('firebase-admin');
 /**
  * Takes in necessary profile information and creates a user object in our database.
  * Creates a new user in our FireBase console
@@ -61,6 +62,35 @@ const loginUser = async (email, password) => {
     } else {
       throw new Error('User not registered, please create an account');
     }
+  } catch (err) {
+    throw err;
+  }
+};
+/**
+ * Create a new user if they don't exist and return user details
+ * If they exist then return the user details only
+ * @param {object} FacebookUser user object
+ * @return {object} the Firebase authentication token along with user information
+ */
+const facebookAuthentication = async (FacebookUser) => {
+  try {
+    const uid = FacebookUser.user.uid;
+    let user = await User.findOne({_id: uid});
+    // if user is null then it is a new user, who needs to be added to our database
+    if (user === null) {
+      user = await User.create({
+        _id: uid,
+        name: FacebookUser.additionalUserInfo.profile.name,
+        username: FacebookUser.user.displayName,
+        email: FacebookUser.user.email,
+        balance: 0,
+      });
+      console.log('User created in database');
+    }
+    // getting a Firebase verification JWT token through creating a custom token
+    const UserToken = await FireBaseService.CustomToIDToken(uid);
+    const retUser = await returnUserDetails(user, true);
+    return {UserToken, retUser};
   } catch (err) {
     throw err;
   }
@@ -277,5 +307,6 @@ module.exports = {
   updateProfilePic: updateProfilePic,
   retrieveProfilePic: retrieveProfilePic,
   returnUserDetails: returnUserDetails,
+  facebookAuthentication: facebookAuthentication,
 };
 

@@ -29,6 +29,18 @@ router.post('/login', AuthMiddleware.validateLogin, async (req, res) => {
   }
 });
 
+// route for Facebook authenentication
+router.post('/facebook-signin', async (req, res) => {
+  try {
+    // user object from front end is passed in the HTTP request
+    const FacebookUser = req.body;
+    const {UserToken, retUser} = await AuthService.facebookAuthentication(FacebookUser);
+    return res.status(200).send({message: 'Successfully logged in the user!', token: UserToken.idToken, expiresIn: UserToken.expiresIn, refreshToken: UserToken.refreshToken, user: retUser});
+  } catch (err) {
+    return res.status(400).send({message: err});
+  }
+});
+
 // route specifically for username or name, seperate route for password
 router.post('/change-account', AuthMiddleware.validateChangeAccount, FireBaseService.Authenticate, async (req, res) => {
   try {
