@@ -9,7 +9,7 @@ const {reset} = require('sinon');
 const multer = require('multer');
 const upload = multer();
 const AuthMiddleware = require('../Middleware/authMiddleware');
-
+// I made a comment to see if i can push to bit bucket
 router.post('/signup', AuthMiddleware.validateSignup, async (req, res) => {
   try {
     const {UserToken, retUser} = await AuthService.signupUser(req.body.name, req.body.username, req.body.email, req.body.phoneNumber, req.body.password);
